@@ -1,0 +1,11 @@
+#Changed the extends model in User model
+
+#Changed the validateForCreation function in Cartalyst Sentinel UserRepository
+
+#Changed the login names in User and Sentinel Eloquent User
+
+#Changed the properties in Sentinel Eloquent User according to our users table
+
+#Changed the Activation code generation function in Sentinel Activation
+
+#Made the name, password column in users table nullable from the MySQL Workbench

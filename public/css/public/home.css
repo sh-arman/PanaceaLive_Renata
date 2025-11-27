@@ -1,0 +1,153 @@
+    * {
+  box-sizing: border-box;
+}
+table {
+  border-collapse: collapse;
+
+}
+a:link {
+  color: green;
+}
+a:hover {
+  color: red;
+}
+a:active {
+  color: yellow;
+}
+/*.column {
+  float: center;
+  width: 33.33%;
+  padding: 0px;
+}
+
+ //Clearfix (clear floats) 
+.row::after {
+  clear: both;
+  display: table;
+
+}*/
+ .head-line{
+        color:white;
+        font-size:20px;
+        font-weight:bold;
+        width:80%;
+        padding-bottom:20px;
+        padding-left:0px;
+        text-align: left;
+    }
+    .responsive {
+  max-width: 100%;
+  height: auto;
+  width:auto;
+}
+     .input-design{
+        height:70px;
+        background-color:transparent;
+        font-size:18px;
+        border:0px;
+        border-bottom:2px solid rgba(255,255,255,.6);
+        width:80%;
+     }
+     .error-msg{
+        color:#d42626;
+        background-color: white !important;
+        /* color:#d42626; */
+        font-weight:bold;
+        font-size:17px;
+        display:none;
+     }
+
+    .progress-bar{
+        position:relative;
+        top: 50px;
+        height: 5px;
+        width: 100%;
+        background-color: rgba(0,153,204,0.5);
+        border-radius: 10px;
+        border-color: #9ecaed;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+    }
+    .progress-bar:after {
+        content:'\A';
+        position:absolute;
+        border-radius: 10px;
+        /* background: rgba(0, 255, 247,0.6); */
+        background: rgba(247,249,249,0.7);
+        top:0; 
+        bottom:0;
+        left:0; 
+        width:33.33%;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+    }
+    .progress-bar.step2:after {
+        content:'\A';
+        position:absolute;
+        border-radius: 10px;
+        background: rgba(247,249,249,0.7);
+        top:0; 
+        bottom:0;
+        left:0; 
+        width:66.66%;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+    }
+    .progress-bar.step3:after {
+        content:'\A';
+        position:absolute;
+        border-radius: 10px;
+        background: rgba(247,249,249,0.7);
+        top:0; 
+        bottom:0;
+        left:0; 
+        width:100%;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+    }
+
+    ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+        color: #78a5df;
+        opacity: 1; /* Firefox */
+    }
+
+    :-ms-input-placeholder { /* Internet Explorer 10-11 */
+        color: #78a5df;
+    }
+
+    ::-ms-input-placeholder { /* Microsoft Edge */
+        color: #78a5df;
+    }
+    
+    input:focus{
+        outline: none;
+        width:90%;
+        font-size:22px;
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+        /* box-shadow: 0px 30px 20px -30px white; */
+    }
+        
+    input{
+        -webkit-transition: all .2s ease;
+        -moz-transition: all .2s ease;
+        transition: all .2s ease;
+    }
+
+    /* This is to prevent autofill from overriding the existing input style */
+    @-webkit-keyframes autofill {
+        to {
+            color: white;
+            background: transparent;
+        }
+    }
+    /* This is to prevent autofill from overriding the existing input style */
+    input:-webkit-autofill {
+        -webkit-animation-name: autofill;
+        -webkit-animation-fill-mode: both;
+    }
