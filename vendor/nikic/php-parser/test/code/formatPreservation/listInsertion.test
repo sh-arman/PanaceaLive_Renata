@@ -141,7 +141,7 @@ function test() {
 namespace
 Foo;
 -----
-$stmts[0]->name->parts[0] = 'Xyz';
+$stmts[0]->name->name = 'Xyz';
 -----
 <?php
 namespace
@@ -307,3 +307,63 @@ $array = [
     1, 2,
     3, 24,
 ];
+-----
+<?php
+function test(): A
+|B {}
+-----
+$stmts[0]->returnType->types[] = new Node\Name('C');
+-----
+<?php
+function test(): A
+|B|C {}
+-----
+<?php
+function test(): A
+&B {}
+-----
+$stmts[0]->returnType->types[] = new Node\Name('C');
+-----
+<?php
+function test(): A
+&B&C {}
+-----
+<?php
+function test() {
+    if ($x) {
+        $a;
+        $b;
+    }
+    $z;
+}
+-----
+$fnStmts =& $stmts[0]->stmts;
+array_splice($fnStmts, 0, 1, $fnStmts[0]->stmts);
+-----
+<?php
+function test() {
+    $a;
+    $b;
+    $z;
+}
+-----
+<?php
+list($x, $y) = $z;
+-----
+array_splice($stmts[0]->expr->var->items, 1, 0, [null]);
+-----
+<?php
+list($x, , $y) = $z;
+-----
+<?php
+{
+    $a; $b;
+}
+-----
+$stmts[0]->stmts[] = new Stmt\Expression(new Expr\Variable('c'));
+-----
+<?php
+{
+    $a; $b;
+    $c;
+}

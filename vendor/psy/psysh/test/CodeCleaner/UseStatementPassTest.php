@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,9 +13,15 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\UseStatementPass;
 
+/**
+ * @group isolation-fail
+ */
 class UseStatementPassTest extends CodeCleanerTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new UseStatementPass());
     }
@@ -67,6 +73,10 @@ class UseStatementPassTest extends CodeCleanerTestCase
                 "use Foo\\Bar as fb, Qux as Q;\n\$baz = new fb\\Baz();\n\$qux = new Q();",
                 "\$baz = new \\Foo\\Bar\\Baz();\n\$qux = new \\Qux();",
             ],
+            [
+                "use Foo\\Bar;\nuse Bar\\Baz;\n\$baz = new Baz();",
+                '$baz = new \\Bar\\Baz();',
+            ],
         ];
     }
 
@@ -80,10 +90,6 @@ class UseStatementPassTest extends CodeCleanerTestCase
 
     public function groupUseStatements()
     {
-        if (\version_compare(PHP_VERSION, '7.0', '<')) {
-            $this->markTestSkipped();
-        }
-
         return [
             [
                 "use Foo\\{Bar, Baz, Qux as Q};\n\$bar = new Bar();\n\$baz = new Baz();\n\$qux = new Q();",

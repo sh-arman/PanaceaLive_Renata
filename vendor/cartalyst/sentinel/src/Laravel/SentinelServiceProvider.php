@@ -11,10 +11,10 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    3.0.3
+ * @version    7.0.0
  * @author     Cartalyst LLC
  * @license    BSD License (3-clause)
- * @copyright  (c) 2011-2019, Cartalyst LLC
+ * @copyright  (c) 2011-2023, Cartalyst LLC
  * @link       https://cartalyst.com
  */
 
@@ -206,7 +206,7 @@ class SentinelServiceProvider extends ServiceProvider
 
             foreach ($activeCheckpoints as $checkpoint) {
                 if (! $app->offsetExists("sentinel.checkpoint.{$checkpoint}")) {
-                    throw new InvalidArgumentException("Invalid checkpoint [${checkpoint}] given.");
+                    throw new InvalidArgumentException("Invalid checkpoint [{$checkpoint}] given.");
                 }
 
                 $checkpoints[$checkpoint] = $app["sentinel.checkpoint.{$checkpoint}"];

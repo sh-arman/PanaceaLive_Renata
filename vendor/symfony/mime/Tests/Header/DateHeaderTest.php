@@ -23,21 +23,21 @@ class DateHeaderTest extends TestCase
     public function testGetDateTime()
     {
         $header = new DateHeader('Date', $dateTime = new \DateTimeImmutable());
-        $this->assertSame($dateTime, $header->getDateTime());
+        $this->assertEquals($dateTime, $header->getDateTime());
     }
 
     public function testDateTimeCanBeSetBySetter()
     {
         $header = new DateHeader('Date', new \DateTimeImmutable());
         $header->setDateTime($dateTime = new \DateTimeImmutable());
-        $this->assertSame($dateTime, $header->getDateTime());
+        $this->assertEquals($dateTime, $header->getDateTime());
     }
 
     public function testDateTimeIsConvertedToImmutable()
     {
         $dateTime = new \DateTime();
         $header = new DateHeader('Date', $dateTime);
-        $this->assertInstanceOf('DateTimeImmutable', $header->getDateTime());
+        $this->assertInstanceOf(\DateTimeImmutable::class, $header->getDateTime());
         $this->assertEquals($dateTime->getTimestamp(), $header->getDateTime()->getTimestamp());
         $this->assertEquals($dateTime->getTimezone(), $header->getDateTime()->getTimezone());
     }

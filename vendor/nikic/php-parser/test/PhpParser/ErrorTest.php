@@ -2,8 +2,7 @@
 
 namespace PhpParser;
 
-class ErrorTest extends \PHPUnit\Framework\TestCase
-{
+class ErrorTest extends \PHPUnit\Framework\TestCase {
     public function testConstruct() {
         $attributes = [
             'startLine' => 10,
@@ -23,7 +22,7 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
     /**
      * @depends testConstruct
      */
-    public function testSetMessageAndLine(Error $error) {
+    public function testSetMessageAndLine(Error $error): void {
         $error->setRawMessage('Some other error');
         $this->assertSame('Some other error', $error->getRawMessage());
 
@@ -32,7 +31,7 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('Some other error on line 15', $error->getMessage());
     }
 
-    public function testUnknownLine() {
+    public function testUnknownLine(): void {
         $error = new Error('Some error');
 
         $this->assertSame(-1, $error->getStartLine());
@@ -41,7 +40,7 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
     }
 
     /** @dataProvider provideTestColumnInfo */
-    public function testColumnInfo($code, $startPos, $endPos, $startColumn, $endColumn) {
+    public function testColumnInfo($code, $startPos, $endPos, $startColumn, $endColumn): void {
         $error = new Error('Some error', [
             'startFilePos' => $startPos,
             'endFilePos' => $endPos,
@@ -50,10 +49,9 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($error->hasColumnInfo());
         $this->assertSame($startColumn, $error->getStartColumn($code));
         $this->assertSame($endColumn, $error->getEndColumn($code));
-
     }
 
-    public function provideTestColumnInfo() {
+    public static function provideTestColumnInfo() {
         return [
             // Error at "bar"
             ["<?php foo bar baz", 10, 12, 11, 13],
@@ -74,8 +72,8 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    public function testNoColumnInfo() {
-        $error = new Error('Some error', 3);
+    public function testNoColumnInfo(): void {
+        $error = new Error('Some error', ['startLine' => 3]);
 
         $this->assertFalse($error->hasColumnInfo());
         try {
@@ -92,7 +90,7 @@ class ErrorTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    public function testInvalidPosInfo() {
+    public function testInvalidPosInfo(): void {
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Invalid position information');
         $error = new Error('Some error', [

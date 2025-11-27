@@ -8,12 +8,17 @@ function test($a, Type &... $b) {}
 -----
 array(
     0: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: test
         )
         params: array(
             0: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: false
                 variadic: false
@@ -21,8 +26,13 @@ array(
                     name: a
                 )
                 default: null
+                hooks: array(
+                )
             )
             1: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: false
                 variadic: true
@@ -30,6 +40,8 @@ array(
                     name: b
                 )
                 default: null
+                hooks: array(
+                )
             )
         )
         returnType: null
@@ -37,12 +49,17 @@ array(
         )
     )
     1: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: test
         )
         params: array(
             0: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: false
                 variadic: false
@@ -50,8 +67,13 @@ array(
                     name: a
                 )
                 default: null
+                hooks: array(
+                )
             )
             1: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: true
                 variadic: true
@@ -59,6 +81,8 @@ array(
                     name: b
                 )
                 default: null
+                hooks: array(
+                )
             )
         )
         returnType: null
@@ -66,12 +90,17 @@ array(
         )
     )
     2: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: test
         )
         params: array(
             0: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: false
                 variadic: false
@@ -79,12 +108,15 @@ array(
                     name: a
                 )
                 default: null
+                hooks: array(
+                )
             )
             1: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: Name(
-                    parts: array(
-                        0: Type
-                    )
+                    name: Type
                 )
                 byRef: false
                 variadic: true
@@ -92,6 +124,8 @@ array(
                     name: b
                 )
                 default: null
+                hooks: array(
+                )
             )
         )
         returnType: null
@@ -99,12 +133,17 @@ array(
         )
     )
     3: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: test
         )
         params: array(
             0: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: null
                 byRef: false
                 variadic: false
@@ -112,12 +151,15 @@ array(
                     name: a
                 )
                 default: null
+                hooks: array(
+                )
             )
             1: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: Name(
-                    parts: array(
-                        0: Type
-                    )
+                    name: Type
                 )
                 byRef: true
                 variadic: true
@@ -125,6 +167,8 @@ array(
                     name: b
                 )
                 default: null
+                hooks: array(
+                )
             )
         )
         returnType: null

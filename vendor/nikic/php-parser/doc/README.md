@@ -27,9 +27,8 @@ Component documentation
   * [AST builders](component/AST_builders.markdown)
     * Fluent builders for AST nodes
   * [Lexer](component/Lexer.markdown)
-    * Lexer options
-    * Token and file positions for nodes
-    * Custom attributes
+    * Emulation
+    * Tokens, positions and attributes
   * [Error handling](component/Error_handling.markdown)
     * Column information for errors
     * Error recovery (parsing of syntactically incorrect code)
@@ -39,7 +38,7 @@ Component documentation
   * [JSON representation](component/JSON_representation.markdown)
     * JSON encoding and decoding of ASTs
   * [Performance](component/Performance.markdown)
-    * Disabling XDebug
+    * Disabling Xdebug
     * Reusing objects
     * Garbage collection impact
   * [Frequently asked questions](component/FAQ.markdown)

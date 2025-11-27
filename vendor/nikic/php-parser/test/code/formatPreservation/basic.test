@@ -106,7 +106,6 @@ $stmts[2] = $tmp;
 array_splice($stmts, 0, 1, []);
 -----
 <?php
-
 function test() {
     call2(
         $foo
@@ -154,8 +153,9 @@ $stmts[1] = $tmp;
  * fallback. */
 -----
 <?php
-
-$x;
+{
+    $x;
+}
 function foo() {
     foo();
     /*

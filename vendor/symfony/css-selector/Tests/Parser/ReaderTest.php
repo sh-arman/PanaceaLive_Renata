@@ -93,10 +93,9 @@ class ReaderTest extends TestCase
         $this->assertTrue($reader->isEOF());
     }
 
-    private function assignPosition(Reader $reader, $value)
+    private function assignPosition(Reader $reader, int $value)
     {
         $position = new \ReflectionProperty($reader, 'position');
-        $position->setAccessible(true);
         $position->setValue($reader, $value);
     }
 }

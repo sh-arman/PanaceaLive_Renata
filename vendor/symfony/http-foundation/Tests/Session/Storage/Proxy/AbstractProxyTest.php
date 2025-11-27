@@ -22,19 +22,11 @@ use Symfony\Component\HttpFoundation\Session\Storage\Proxy\SessionHandlerProxy;
  */
 class AbstractProxyTest extends TestCase
 {
-    /**
-     * @var AbstractProxy
-     */
-    protected $proxy;
+    protected AbstractProxy $proxy;
 
     protected function setUp(): void
     {
-        $this->proxy = $this->getMockForAbstractClass(AbstractProxy::class);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->proxy = null;
+        $this->proxy = new class extends AbstractProxy {};
     }
 
     public function testGetSaveHandlerName()
@@ -56,6 +48,7 @@ class AbstractProxyTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testIsActive()
@@ -67,6 +60,7 @@ class AbstractProxyTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testName()
@@ -79,17 +73,19 @@ class AbstractProxyTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testNameException()
     {
-        $this->expectException('LogicException');
+        $this->expectException(\LogicException::class);
         session_start();
         $this->proxy->setName('foo');
     }
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testId()
@@ -102,11 +98,12 @@ class AbstractProxyTest extends TestCase
 
     /**
      * @runInSeparateProcess
+     *
      * @preserveGlobalState disabled
      */
     public function testIdException()
     {
-        $this->expectException('LogicException');
+        $this->expectException(\LogicException::class);
         session_start();
         $this->proxy->setId('foo');
     }

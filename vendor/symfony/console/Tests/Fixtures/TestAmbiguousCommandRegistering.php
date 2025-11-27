@@ -6,7 +6,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class TestAmbiguousCommandRegistering extends Command
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('test-ambiguous')
@@ -15,8 +15,10 @@ class TestAmbiguousCommandRegistering extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->write('test-ambiguous');
+
+        return 0;
     }
 }

@@ -27,6 +27,6 @@ class Company extends Model
 
     public function medicines()
     {
-        return $this->hasMany('App\Medicine');
+        return $this->hasMany(Medicine::class);
     }
 }

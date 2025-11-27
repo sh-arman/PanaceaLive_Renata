@@ -6,7 +6,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class FooWithoutAliasCommand extends Command
 {
-    protected function configure()
+    protected function configure(): void
     {
         $this
             ->setName('foo')
@@ -14,8 +14,10 @@ class FooWithoutAliasCommand extends Command
         ;
     }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('called');
+
+        return 0;
     }
 }

@@ -13,6 +13,7 @@ namespace Symfony\Component\HttpKernel\Tests\Controller\ArgumentResolver;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\DependencyInjection\Exception\RuntimeException;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver;
@@ -21,93 +22,79 @@ use Symfony\Component\HttpKernel\DependencyInjection\RegisterControllerArgumentL
 
 class ServiceValueResolverTest extends TestCase
 {
+    /**
+     * In Symfony 7, keep this test case but remove the call to supports().
+     *
+     * @group legacy
+     */
     public function testDoNotSupportWhenControllerDoNotExists()
     {
         $resolver = new ServiceValueResolver(new ServiceLocator([]));
         $argument = new ArgumentMetadata('dummy', DummyService::class, false, false, null);
         $request = $this->requestWithAttributes(['_controller' => 'my_controller']);
 
+        $this->assertSame([], $resolver->resolve($request, $argument));
         $this->assertFalse($resolver->supports($request, $argument));
     }
 
     public function testExistingController()
     {
         $resolver = new ServiceValueResolver(new ServiceLocator([
-            'App\\Controller\\Mine::method' => function () {
-                return new ServiceLocator([
-                    'dummy' => function () {
-                        return new DummyService();
-                    },
-                ]);
-            },
+            'App\\Controller\\Mine::method' => fn () => new ServiceLocator([
+                'dummy' => fn () => new DummyService(),
+            ]),
         ]));
 
         $request = $this->requestWithAttributes(['_controller' => 'App\\Controller\\Mine::method']);
         $argument = new ArgumentMetadata('dummy', DummyService::class, false, false, null);
 
-        $this->assertTrue($resolver->supports($request, $argument));
-        $this->assertYieldEquals([new DummyService()], $resolver->resolve($request, $argument));
+        $this->assertEquals([new DummyService()], $resolver->resolve($request, $argument));
     }
 
     public function testExistingControllerWithATrailingBackSlash()
     {
         $resolver = new ServiceValueResolver(new ServiceLocator([
-            'App\\Controller\\Mine::method' => function () {
-                return new ServiceLocator([
-                    'dummy' => function () {
-                        return new DummyService();
-                    },
-                ]);
-            },
+            'App\\Controller\\Mine::method' => fn () => new ServiceLocator([
+                'dummy' => fn () => new DummyService(),
+            ]),
         ]));
 
         $request = $this->requestWithAttributes(['_controller' => '\\App\\Controller\\Mine::method']);
         $argument = new ArgumentMetadata('dummy', DummyService::class, false, false, null);
 
-        $this->assertTrue($resolver->supports($request, $argument));
-        $this->assertYieldEquals([new DummyService()], $resolver->resolve($request, $argument));
+        $this->assertEquals([new DummyService()], $resolver->resolve($request, $argument));
     }
 
     public function testExistingControllerWithMethodNameStartUppercase()
     {
         $resolver = new ServiceValueResolver(new ServiceLocator([
-            'App\\Controller\\Mine::method' => function () {
-                return new ServiceLocator([
-                    'dummy' => function () {
-                        return new DummyService();
-                    },
-                ]);
-            },
+            'App\\Controller\\Mine::method' => fn () => new ServiceLocator([
+                'dummy' => fn () => new DummyService(),
+            ]),
         ]));
         $request = $this->requestWithAttributes(['_controller' => 'App\\Controller\\Mine::Method']);
         $argument = new ArgumentMetadata('dummy', DummyService::class, false, false, null);
 
-        $this->assertTrue($resolver->supports($request, $argument));
-        $this->assertYieldEquals([new DummyService()], $resolver->resolve($request, $argument));
+        $this->assertEquals([new DummyService()], $resolver->resolve($request, $argument));
     }
 
     public function testControllerNameIsAnArray()
     {
         $resolver = new ServiceValueResolver(new ServiceLocator([
-            'App\\Controller\\Mine::method' => function () {
-                return new ServiceLocator([
-                    'dummy' => function () {
-                        return new DummyService();
-                    },
-                ]);
-            },
+            'App\\Controller\\Mine::method' => fn () => new ServiceLocator([
+                'dummy' => fn () => new DummyService(),
+            ]),
         ]));
 
         $request = $this->requestWithAttributes(['_controller' => ['App\\Controller\\Mine', 'method']]);
         $argument = new ArgumentMetadata('dummy', DummyService::class, false, false, null);
 
-        $this->assertTrue($resolver->supports($request, $argument));
-        $this->assertYieldEquals([new DummyService()], $resolver->resolve($request, $argument));
+        $this->assertEquals([new DummyService()], $resolver->resolve($request, $argument));
     }
 
     public function testErrorIsTruncated()
     {
-        $this->expectException('Symfony\Component\DependencyInjection\Exception\RuntimeException');
+        $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot autowire argument $dummy of "Symfony\Component\HttpKernel\Tests\Controller\ArgumentResolver\DummyController::index()": it references class "Symfony\Component\HttpKernel\Tests\Controller\ArgumentResolver\DummyService" but no such service exists.');
         $container = new ContainerBuilder();
         $container->addCompilerPass(new RegisterControllerArgumentLocatorsPass());
@@ -131,16 +118,6 @@ class ServiceValueResolverTest extends TestCase
         }
 
         return $request;
-    }
-
-    private function assertYieldEquals(array $expected, \Generator $generator)
-    {
-        $args = [];
-        foreach ($generator as $arg) {
-            $args[] = $arg;
-        }
-
-        $this->assertEquals($expected, $args);
     }
 }
 

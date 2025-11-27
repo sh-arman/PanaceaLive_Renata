@@ -5,20 +5,22 @@ Nullable types
 function test(?Foo $bar, ?string $foo) : ?Baz {
 }
 -----
-!!php7
 array(
     0: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: test
         )
         params: array(
             0: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: NullableType(
                     type: Name(
-                        parts: array(
-                            0: Foo
-                        )
+                        name: Foo
                     )
                 )
                 byRef: false
@@ -27,8 +29,13 @@ array(
                     name: bar
                 )
                 default: null
+                hooks: array(
+                )
             )
             1: Param(
+                attrGroups: array(
+                )
+                flags: 0
                 type: NullableType(
                     type: Identifier(
                         name: string
@@ -40,13 +47,13 @@ array(
                     name: foo
                 )
                 default: null
+                hooks: array(
+                )
             )
         )
         returnType: NullableType(
             type: Name(
-                parts: array(
-                    0: Baz
-                )
+                name: Baz
             )
         )
         stmts: array(

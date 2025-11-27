@@ -20,6 +20,9 @@ use Symfony\Component\Stopwatch\Stopwatch;
 
 class TraceableValueResolverTest extends TestCase
 {
+    /**
+     * @group legacy
+     */
     public function testTimingsInSupports()
     {
         $stopwatch = new Stopwatch();
@@ -63,12 +66,12 @@ class TraceableValueResolverTest extends TestCase
 
 class ResolverStub implements ArgumentValueResolverInterface
 {
-    public function supports(Request $request, ArgumentMetadata $argument)
+    public function supports(Request $request, ArgumentMetadata $argument): bool
     {
         return true;
     }
 
-    public function resolve(Request $request, ArgumentMetadata $argument)
+    public function resolve(Request $request, ArgumentMetadata $argument): iterable
     {
         yield 'first';
         yield 'second';

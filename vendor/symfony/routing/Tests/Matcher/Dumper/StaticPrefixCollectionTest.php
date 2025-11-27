@@ -1,5 +1,14 @@
 <?php
 
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Symfony\Component\Routing\Tests\Matcher\Dumper;
 
 use PHPUnit\Framework\TestCase;
@@ -16,7 +25,7 @@ class StaticPrefixCollectionTest extends TestCase
         $collection = new StaticPrefixCollection('/');
 
         foreach ($routes as $route) {
-            list($path, $name) = $route;
+            [$path, $name] = $route;
             $staticPrefix = (new Route($path))->compile()->getStaticPrefix();
             $collection->addRoute($staticPrefix, [$name]);
         }
@@ -25,7 +34,7 @@ class StaticPrefixCollectionTest extends TestCase
         $this->assertEquals($expected, $dumped);
     }
 
-    public function routeProvider()
+    public static function routeProvider()
     {
         return [
             'Simple - not nested' => [
@@ -38,7 +47,7 @@ class StaticPrefixCollectionTest extends TestCase
 root
 prefix_segment
 leading_segment
-EOF
+EOF,
             ],
             'Nested - small group' => [
                 [
@@ -51,7 +60,7 @@ root
 /prefix/segment/
 -> prefix_segment
 -> leading_segment
-EOF
+EOF,
             ],
             'Nested - contains item at intersection' => [
                 [
@@ -64,7 +73,7 @@ root
 /prefix/segment/
 -> prefix_segment
 -> leading_segment
-EOF
+EOF,
             ],
             'Simple one level nesting' => [
                 [
@@ -79,7 +88,7 @@ root
 -> nested_segment
 -> some_segment
 -> other_segment
-EOF
+EOF,
             ],
             'Retain matching order with groups' => [
                 [
@@ -101,7 +110,7 @@ root
 -> dd
 -> ee
 -> ff
-EOF
+EOF,
             ],
             'Retain complex matching order with groups at base' => [
                 [
@@ -133,7 +142,7 @@ EOF
 -> -> ee
 -> -> ff
 -> parent
-EOF
+EOF,
             ],
 
             'Group regardless of segments' => [
@@ -154,7 +163,7 @@ EOF
 -> g1
 -> g2
 -> g3
-EOF
+EOF,
             ],
         ];
     }

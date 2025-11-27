@@ -11,10 +11,10 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    3.0.3
+ * @version    7.0.0
  * @author     Cartalyst LLC
  * @license    BSD License (3-clause)
- * @copyright  (c) 2011-2019, Cartalyst LLC
+ * @copyright  (c) 2011-2023, Cartalyst LLC
  * @link       https://cartalyst.com
  */
 
@@ -105,6 +105,13 @@ class IlluminateThrottleRepository implements ThrottleRepositoryInterface
      * @var \Illuminate\Database\Eloquent\Collection
      */
     protected $userThrottles = [];
+    
+    /**
+     * The EloquentThrottle Model.
+     *
+     * @var string
+     */
+    protected $model;
 
     /**
      * Create a new Illuminate throttle repository.

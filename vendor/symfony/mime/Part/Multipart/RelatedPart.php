@@ -16,12 +16,10 @@ use Symfony\Component\Mime\Part\AbstractPart;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @experimental in 4.3
  */
 final class RelatedPart extends AbstractMultipartPart
 {
-    private $mainPart;
+    private AbstractPart $mainPart;
 
     public function __construct(AbstractPart $mainPart, AbstractPart $part, AbstractPart ...$parts)
     {

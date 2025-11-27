@@ -3,13 +3,11 @@ UVS new expressions
 <?php
 new $className;
 new $array['className'];
-new $array{'className'};
 new $obj->className;
 new Test::$className;
 new $test::$className;
 new $weird[0]->foo::$className;
 -----
-!!php7
 array(
     0: Stmt_Expression(
         expr: Expr_New(
@@ -36,20 +34,6 @@ array(
     )
     2: Stmt_Expression(
         expr: Expr_New(
-            class: Expr_ArrayDimFetch(
-                var: Expr_Variable(
-                    name: array
-                )
-                dim: Scalar_String(
-                    value: className
-                )
-            )
-            args: array(
-            )
-        )
-    )
-    3: Stmt_Expression(
-        expr: Expr_New(
             class: Expr_PropertyFetch(
                 var: Expr_Variable(
                     name: obj
@@ -62,13 +46,11 @@ array(
             )
         )
     )
-    4: Stmt_Expression(
+    3: Stmt_Expression(
         expr: Expr_New(
             class: Expr_StaticPropertyFetch(
                 class: Name(
-                    parts: array(
-                        0: Test
-                    )
+                    name: Test
                 )
                 name: VarLikeIdentifier(
                     name: className
@@ -78,7 +60,7 @@ array(
             )
         )
     )
-    5: Stmt_Expression(
+    4: Stmt_Expression(
         expr: Expr_New(
             class: Expr_StaticPropertyFetch(
                 class: Expr_Variable(
@@ -92,7 +74,7 @@ array(
             )
         )
     )
-    6: Stmt_Expression(
+    5: Stmt_Expression(
         expr: Expr_New(
             class: Expr_StaticPropertyFetch(
                 class: Expr_PropertyFetch(
@@ -100,7 +82,7 @@ array(
                         var: Expr_Variable(
                             name: weird
                         )
-                        dim: Scalar_LNumber(
+                        dim: Scalar_Int(
                             value: 0
                         )
                     )

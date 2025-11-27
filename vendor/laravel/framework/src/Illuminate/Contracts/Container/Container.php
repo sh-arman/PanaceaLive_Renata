@@ -30,7 +30,7 @@ interface Container extends ContainerInterface
      * Assign a set of tags to a given binding.
      *
      * @param  array|string  $abstracts
-     * @param  array|mixed   ...$tags
+     * @param  array|mixed  ...$tags
      * @return void
      */
     public function tag($abstracts, $tags);
@@ -52,6 +52,15 @@ interface Container extends ContainerInterface
      * @return void
      */
     public function bind($abstract, $concrete = null, $shared = false);
+
+    /**
+     * Bind a callback to resolve with Container::call.
+     *
+     * @param  array|string  $method
+     * @param  \Closure  $callback
+     * @return void
+     */
+    public function bindMethod($method, $callback);
 
     /**
      * Register a binding if it hasn't already been registered.
@@ -82,9 +91,27 @@ interface Container extends ContainerInterface
     public function singletonIf($abstract, $concrete = null);
 
     /**
+     * Register a scoped binding in the container.
+     *
+     * @param  string  $abstract
+     * @param  \Closure|string|null  $concrete
+     * @return void
+     */
+    public function scoped($abstract, $concrete = null);
+
+    /**
+     * Register a scoped binding if it hasn't already been registered.
+     *
+     * @param  string  $abstract
+     * @param  \Closure|string|null  $concrete
+     * @return void
+     */
+    public function scopedIf($abstract, $concrete = null);
+
+    /**
      * "Extend" an abstract type in the container.
      *
-     * @param  string    $abstract
+     * @param  string  $abstract
      * @param  \Closure  $closure
      * @return void
      *
@@ -96,7 +123,7 @@ interface Container extends ContainerInterface
      * Register an existing instance as shared in the container.
      *
      * @param  string  $abstract
-     * @param  mixed   $instance
+     * @param  mixed  $instance
      * @return mixed
      */
     public function instance($abstract, $instance);
@@ -158,10 +185,19 @@ interface Container extends ContainerInterface
     /**
      * Determine if the given abstract type has been resolved.
      *
-     * @param  string $abstract
+     * @param  string  $abstract
      * @return bool
      */
     public function resolved($abstract);
+
+    /**
+     * Register a new before resolving callback.
+     *
+     * @param  \Closure|string  $abstract
+     * @param  \Closure|null  $callback
+     * @return void
+     */
+    public function beforeResolving($abstract, ?Closure $callback = null);
 
     /**
      * Register a new resolving callback.
@@ -170,7 +206,7 @@ interface Container extends ContainerInterface
      * @param  \Closure|null  $callback
      * @return void
      */
-    public function resolving($abstract, Closure $callback = null);
+    public function resolving($abstract, ?Closure $callback = null);
 
     /**
      * Register a new after resolving callback.
@@ -179,5 +215,5 @@ interface Container extends ContainerInterface
      * @param  \Closure|null  $callback
      * @return void
      */
-    public function afterResolving($abstract, Closure $callback = null);
+    public function afterResolving($abstract, ?Closure $callback = null);
 }

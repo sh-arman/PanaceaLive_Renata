@@ -14,9 +14,11 @@ namespace Symfony\Component\HttpKernel\Tests;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Cookie;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\HttpKernel\HttpKernelBrowser;
+use Symfony\Component\HttpKernel\Tests\Fixtures\MockableUploadFileWithClientSize;
 use Symfony\Component\HttpKernel\Tests\Fixtures\TestClient;
 
 /**
@@ -30,17 +32,17 @@ class HttpKernelBrowserTest extends TestCase
 
         $client->request('GET', '/');
         $this->assertEquals('Request: /', $client->getResponse()->getContent(), '->doRequest() uses the request handler to make the request');
-        $this->assertInstanceOf('Symfony\Component\BrowserKit\Request', $client->getInternalRequest());
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Request', $client->getRequest());
-        $this->assertInstanceOf('Symfony\Component\BrowserKit\Response', $client->getInternalResponse());
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\Response', $client->getResponse());
+        $this->assertInstanceOf(\Symfony\Component\BrowserKit\Request::class, $client->getInternalRequest());
+        $this->assertInstanceOf(Request::class, $client->getRequest());
+        $this->assertInstanceOf(\Symfony\Component\BrowserKit\Response::class, $client->getInternalResponse());
+        $this->assertInstanceOf(Response::class, $client->getResponse());
 
         $client->request('GET', 'http://www.example.com/');
         $this->assertEquals('Request: /', $client->getResponse()->getContent(), '->doRequest() uses the request handler to make the request');
         $this->assertEquals('www.example.com', $client->getRequest()->getHost(), '->doRequest() uses the request handler to make the request');
 
-        $client->request('GET', 'http://www.example.com/?parameter=http://google.com');
-        $this->assertEquals('http://www.example.com/?parameter='.urlencode('http://google.com'), $client->getRequest()->getUri(), '->doRequest() uses the request handler to make the request');
+        $client->request('GET', 'http://www.example.com/?parameter=http://example.com');
+        $this->assertEquals('http://www.example.com/?parameter='.urlencode('http://example.com'), $client->getRequest()->getUri(), '->doRequest() uses the request handler to make the request');
     }
 
     public function testGetScript()
@@ -58,16 +60,15 @@ class HttpKernelBrowserTest extends TestCase
 
         $r = new \ReflectionObject($client);
         $m = $r->getMethod('filterResponse');
-        $m->setAccessible(true);
 
         $response = new Response();
-        $response->headers->setCookie($cookie1 = new Cookie('foo', 'bar', \DateTime::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
+        $response->headers->setCookie($cookie1 = new Cookie('foo', 'bar', \DateTimeImmutable::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
         $domResponse = $m->invoke($client, $response);
         $this->assertSame((string) $cookie1, $domResponse->getHeader('Set-Cookie'));
 
         $response = new Response();
-        $response->headers->setCookie($cookie1 = new Cookie('foo', 'bar', \DateTime::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
-        $response->headers->setCookie($cookie2 = new Cookie('foo1', 'bar1', \DateTime::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
+        $response->headers->setCookie($cookie1 = new Cookie('foo', 'bar', \DateTimeImmutable::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
+        $response->headers->setCookie($cookie2 = new Cookie('foo1', 'bar1', \DateTimeImmutable::createFromFormat('j-M-Y H:i:s T', '15-Feb-2009 20:00:00 GMT')->format('U'), '/foo', 'http://example.com', true, true, false, null));
         $domResponse = $m->invoke($client, $response);
         $this->assertSame((string) $cookie1, $domResponse->getHeader('Set-Cookie'));
         $this->assertSame([(string) $cookie1, (string) $cookie2], $domResponse->getHeader('Set-Cookie', false));
@@ -79,7 +80,6 @@ class HttpKernelBrowserTest extends TestCase
 
         $r = new \ReflectionObject($client);
         $m = $r->getMethod('filterResponse');
-        $m->setAccessible(true);
 
         $response = new StreamedResponse(function () {
             echo 'foo';
@@ -100,8 +100,8 @@ class HttpKernelBrowserTest extends TestCase
         $client = new HttpKernelBrowser($kernel);
 
         $files = [
-            ['tmp_name' => $source, 'name' => 'original', 'type' => 'mime/original', 'size' => null, 'error' => UPLOAD_ERR_OK],
-            new UploadedFile($source, 'original', 'mime/original', UPLOAD_ERR_OK, true),
+            ['tmp_name' => $source, 'name' => 'original', 'type' => 'mime/original', 'size' => null, 'error' => \UPLOAD_ERR_OK],
+            new UploadedFile($source, 'original', 'mime/original', \UPLOAD_ERR_OK, true),
         ];
 
         $file = null;
@@ -130,7 +130,7 @@ class HttpKernelBrowserTest extends TestCase
         $kernel = new TestHttpKernel();
         $client = new HttpKernelBrowser($kernel);
 
-        $file = ['tmp_name' => '', 'name' => '', 'type' => '', 'size' => 0, 'error' => UPLOAD_ERR_NO_FILE];
+        $file = ['tmp_name' => '', 'name' => '', 'type' => '', 'size' => 0, 'error' => \UPLOAD_ERR_NO_FILE];
 
         $client->request('POST', '/', [], ['foo' => $file]);
 
@@ -142,25 +142,29 @@ class HttpKernelBrowserTest extends TestCase
 
     public function testUploadedFileWhenSizeExceedsUploadMaxFileSize()
     {
+        if (UploadedFile::getMaxFilesize() > \PHP_INT_MAX) {
+            $this->markTestSkipped('Requires PHP_INT_MAX to be greater than "upload_max_filesize" and "post_max_size" ini settings');
+        }
+
         $source = tempnam(sys_get_temp_dir(), 'source');
 
         $kernel = new TestHttpKernel();
         $client = new HttpKernelBrowser($kernel);
 
         $file = $this
-            ->getMockBuilder('Symfony\Component\HttpFoundation\File\UploadedFile')
-            ->setConstructorArgs([$source, 'original', 'mime/original', UPLOAD_ERR_OK, true])
-            ->setMethods(['getSize', 'getClientSize'])
+            ->getMockBuilder(MockableUploadFileWithClientSize::class)
+            ->setConstructorArgs([$source, 'original', 'mime/original', \UPLOAD_ERR_OK, true])
+            ->onlyMethods(['getSize', 'getClientSize'])
             ->getMock()
         ;
         /* should be modified when the getClientSize will be removed */
         $file->expects($this->any())
             ->method('getSize')
-            ->willReturn(INF)
+            ->willReturn(\PHP_INT_MAX)
         ;
         $file->expects($this->any())
             ->method('getClientSize')
-            ->willReturn(PHP_INT_MAX)
+            ->willReturn(\PHP_INT_MAX)
         ;
 
         $client->request('POST', '/', [], [$file]);
@@ -172,11 +176,22 @@ class HttpKernelBrowserTest extends TestCase
         $file = $files[0];
 
         $this->assertFalse($file->isValid());
-        $this->assertEquals(UPLOAD_ERR_INI_SIZE, $file->getError());
+        $this->assertEquals(\UPLOAD_ERR_INI_SIZE, $file->getError());
         $this->assertEquals('mime/original', $file->getClientMimeType());
         $this->assertEquals('original', $file->getClientOriginalName());
         $this->assertEquals(0, $file->getSize());
 
         unlink($source);
+    }
+
+    public function testAcceptHeaderNotSet()
+    {
+        $client = new HttpKernelBrowser(new TestHttpKernel());
+
+        $client->request('GET', '/');
+        $this->assertFalse($client->getRequest()->headers->has('Accept'));
+
+        $client->request('GET', '/', [], [], ['HTTP_ACCEPT' => 'application/ld+json']);
+        $this->assertSame('application/ld+json', $client->getRequest()->headers->get('Accept'));
     }
 }

@@ -22,7 +22,7 @@ class MessagePartTest extends TestCase
 {
     public function testConstructor()
     {
-        $p = new MessagePart((new Email())->from('fabien@symfony.com')->text('content'));
+        $p = new MessagePart((new Email())->from('fabien@symfony.com')->to('you@example.com')->text('content'));
         $this->assertStringContainsString('content', $p->getBody());
         $this->assertStringContainsString('content', $p->bodyToString());
         $this->assertStringContainsString('content', implode('', iterator_to_array($p->bodyToIterable())));
@@ -38,5 +38,15 @@ class MessagePartTest extends TestCase
             new UnstructuredHeader('Content-Transfer-Encoding', 'base64'),
             new ParameterizedHeader('Content-Disposition', 'attachment', ['name' => 'Subject.eml', 'filename' => 'Subject.eml'])
         ), $p->getPreparedHeaders());
+    }
+
+    public function testSerialize()
+    {
+        $email = (new Email())->from('fabien@symfony.com')->to('you@example.com')->text('content');
+        $email->getHeaders()->addIdHeader('Message-ID', $email->generateMessageId());
+
+        $p = new MessagePart($email);
+        $expected = clone $p;
+        $this->assertEquals($expected->toString(), unserialize(serialize($p))->toString());
     }
 }

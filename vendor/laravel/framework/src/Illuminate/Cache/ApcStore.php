@@ -41,18 +41,14 @@ class ApcStore extends TaggableStore
      */
     public function get($key)
     {
-        $value = $this->apc->get($this->prefix.$key);
-
-        if ($value !== false) {
-            return $value;
-        }
+        return $this->apc->get($this->prefix.$key);
     }
 
     /**
      * Store an item in the cache for a given number of seconds.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @param  int  $seconds
      * @return bool
      */
@@ -65,7 +61,7 @@ class ApcStore extends TaggableStore
      * Increment the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return int|bool
      */
     public function increment($key, $value = 1)
@@ -77,7 +73,7 @@ class ApcStore extends TaggableStore
      * Decrement the value of an item in the cache.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return int|bool
      */
     public function decrement($key, $value = 1)
@@ -89,7 +85,7 @@ class ApcStore extends TaggableStore
      * Store an item in the cache indefinitely.
      *
      * @param  string  $key
-     * @param  mixed   $value
+     * @param  mixed  $value
      * @return bool
      */
     public function forever($key, $value)

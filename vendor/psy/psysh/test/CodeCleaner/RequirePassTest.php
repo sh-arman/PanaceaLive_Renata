@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,9 +13,15 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\RequirePass;
 
+/**
+ * @group isolation-fail
+ */
 class RequirePassTest extends CodeCleanerTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new RequirePass());
     }
@@ -53,28 +59,31 @@ class RequirePassTest extends CodeCleanerTestCase
         ];
     }
 
-    /**
-     * @expectedException \Psy\Exception\FatalErrorException
-     * @expectedExceptionMessage Failed opening required 'not a file name' in eval()'d code on line 2
-     */
     public function testResolve()
     {
+        $this->expectException(\Psy\Exception\FatalErrorException::class);
+        $this->expectExceptionMessage('Failed opening required \'not a file name\' in eval()\'d code on line 2');
+
         RequirePass::resolve('not a file name', 2);
+
+        $this->fail();
     }
 
     /**
      * @dataProvider emptyWarnings
-     *
-     * @expectedException \Psy\Exception\ErrorException
-     * @expectedExceptionMessage Filename cannot be empty on line 1
      */
     public function testResolveEmptyWarnings($file)
     {
-        if (!E_WARNING & \error_reporting()) {
+        if (!\E_WARNING & \error_reporting()) {
             $this->markTestSkipped();
         }
 
+        $this->expectException(\Psy\Exception\ErrorException::class);
+        $this->expectExceptionMessage('Filename cannot be empty on line 1');
+
         RequirePass::resolve($file, 1);
+
+        $this->fail();
     }
 
     public function emptyWarnings()
@@ -88,6 +97,6 @@ class RequirePassTest extends CodeCleanerTestCase
 
     public function testResolveWorks()
     {
-        $this->assertEquals(__FILE__, RequirePass::resolve(__FILE__, 3));
+        $this->assertSame(__FILE__, RequirePass::resolve(__FILE__, 3));
     }
 }

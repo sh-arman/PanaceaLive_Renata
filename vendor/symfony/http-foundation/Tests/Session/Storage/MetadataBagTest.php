@@ -21,12 +21,8 @@ use Symfony\Component\HttpFoundation\Session\Storage\MetadataBag;
  */
 class MetadataBagTest extends TestCase
 {
-    /**
-     * @var MetadataBag
-     */
-    protected $bag;
-
-    protected $array = [];
+    protected MetadataBag $bag;
+    protected array $array = [];
 
     protected function setUp(): void
     {
@@ -34,13 +30,6 @@ class MetadataBagTest extends TestCase
         $this->bag = new MetadataBag();
         $this->array = [MetadataBag::CREATED => 1234567, MetadataBag::UPDATED => 12345678, MetadataBag::LIFETIME => 0];
         $this->bag->initialize($this->array);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->array = [];
-        $this->bag = null;
-        parent::tearDown();
     }
 
     public function testInitialize()
@@ -135,5 +124,15 @@ class MetadataBagTest extends TestCase
         $bag->initialize($sessionMetadata);
 
         $this->assertEquals($timeStamp, $sessionMetadata[MetadataBag::UPDATED]);
+    }
+
+    public function testLifetimeIsInt()
+    {
+        $sessionMetadata = [];
+
+        $bag = new MetadataBag();
+        $bag->initialize($sessionMetadata);
+
+        $this->assertIsInt($bag->getLifetime());
     }
 }

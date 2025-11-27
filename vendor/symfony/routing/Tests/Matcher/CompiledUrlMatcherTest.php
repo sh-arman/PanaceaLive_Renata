@@ -18,10 +18,10 @@ use Symfony\Component\Routing\RouteCollection;
 
 class CompiledUrlMatcherTest extends UrlMatcherTest
 {
-    protected function getUrlMatcher(RouteCollection $routes, RequestContext $context = null)
+    protected function getUrlMatcher(RouteCollection $routes, ?RequestContext $context = null)
     {
         $dumper = new CompiledUrlMatcherDumper($routes);
 
-        return new CompiledUrlMatcher($dumper->getCompiledRoutes(), $context ?: new RequestContext());
+        return new CompiledUrlMatcher($dumper->getCompiledRoutes(), $context ?? new RequestContext());
     }
 }

@@ -18,7 +18,7 @@ use Symfony\Component\Mime\MimeTypes;
 /**
  * @requires extension fileinfo
  */
-class MimeTypesTest extends AbstractMimeTypeGuesserTest
+class MimeTypesTest extends AbstractMimeTypeGuesserTestCase
 {
     protected function getGuesser(): MimeTypeGuesserInterface
     {
@@ -28,7 +28,7 @@ class MimeTypesTest extends AbstractMimeTypeGuesserTest
     public function testUnsupportedGuesser()
     {
         $guesser = $this->getGuesser();
-        $guesser->registerGuesser(new class() implements MimeTypeGuesserInterface {
+        $guesser->registerGuesser(new class implements MimeTypeGuesserInterface {
             public function isGuesserSupported(): bool
             {
                 return false;
@@ -47,6 +47,8 @@ class MimeTypesTest extends AbstractMimeTypeGuesserTest
         $mt = new MimeTypes();
         $this->assertSame(['mbox'], $mt->getExtensions('application/mbox'));
         $this->assertSame(['ai', 'eps', 'ps'], $mt->getExtensions('application/postscript'));
+        $this->assertContains('svg', $mt->getExtensions('image/svg+xml'));
+        $this->assertContains('svg', $mt->getExtensions('image/svg'));
         $this->assertSame([], $mt->getExtensions('application/whatever-symfony'));
     }
 
@@ -56,6 +58,28 @@ class MimeTypesTest extends AbstractMimeTypeGuesserTest
         $this->assertSame(['application/mbox'], $mt->getMimeTypes('mbox'));
         $this->assertContains('application/postscript', $mt->getMimeTypes('ai'));
         $this->assertContains('application/postscript', $mt->getMimeTypes('ps'));
+        $this->assertContains('image/svg+xml', $mt->getMimeTypes('svg'));
+        $this->assertContains('image/svg', $mt->getMimeTypes('svg'));
         $this->assertSame([], $mt->getMimeTypes('symfony'));
+    }
+
+    public function testCustomMimeTypes()
+    {
+        $mt = new MimeTypes([
+            'text/bar' => ['foo'],
+            'text/baz' => ['foo', 'moof'],
+        ]);
+        $this->assertContains('text/bar', $mt->getMimeTypes('foo'));
+        $this->assertContains('text/baz', $mt->getMimeTypes('foo'));
+        $this->assertSame(['foo', 'moof'], $mt->getExtensions('text/baz'));
+    }
+
+    public function testCsvExtension()
+    {
+        $mt = new MimeTypes();
+
+        $mime = $mt->guessMimeType(__DIR__.'/Fixtures/mimetypes/abc.csv');
+        $this->assertContains($mime, ['application/csv', 'text/csv']);
+        $this->assertSame(['csv'], $mt->getExtensions($mime));
     }
 }

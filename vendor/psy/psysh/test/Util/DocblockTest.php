@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@ namespace Psy\Test\Util;
 
 use Psy\Util\Docblock;
 
-class DocblockTest extends \PHPUnit\Framework\TestCase
+class DocblockTest extends \Psy\Test\TestCase
 {
     /**
      * @dataProvider comments
@@ -21,13 +21,13 @@ class DocblockTest extends \PHPUnit\Framework\TestCase
     public function testDocblockParsing($comment, $body, $tags)
     {
         $reflector = $this
-            ->getMockBuilder('ReflectionClass')
+            ->getMockBuilder(\ReflectionClass::class)
             ->disableOriginalConstructor()
             ->getMock();
 
         $reflector->expects($this->once())
             ->method('getDocComment')
-            ->will($this->returnValue($comment));
+            ->willReturn($comment);
 
         $docblock = new Docblock($reflector);
 
@@ -41,10 +41,6 @@ class DocblockTest extends \PHPUnit\Framework\TestCase
 
     public function comments()
     {
-        if (\defined('HHVM_VERSION')) {
-            $this->markTestSkipped('We have issues with PHPUnit mocks on HHVM.');
-        }
-
         return [
             ['', '', []],
             [
@@ -94,6 +90,18 @@ class DocblockTest extends \PHPUnit\Framework\TestCase
                 [
                     'tagname' => ['plus a description'],
                 ],
+            ],
+            [
+                '/**
+                 * This is a single-line docblock.
+                 */',
+                'This is a single-line docblock.',
+                [],
+            ],
+            [
+                '/** This is a single-line docblock. */',
+                'This is a single-line docblock.',
+                [],
             ],
         ];
     }

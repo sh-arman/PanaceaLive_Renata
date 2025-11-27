@@ -25,9 +25,7 @@ class ParserTest extends TestCase
     {
         $parser = new Parser();
 
-        $this->assertEquals($representation, array_map(function (SelectorNode $node) {
-            return (string) $node->getTree();
-        }, $parser->parse($source)));
+        $this->assertEquals($representation, array_map(fn (SelectorNode $node) => (string) $node->getTree(), $parser->parse($source)));
     }
 
     /** @dataProvider getParserExceptionTestData */
@@ -72,7 +70,7 @@ class ParserTest extends TestCase
     public function testParseSeries($series, $a, $b)
     {
         $parser = new Parser();
-        $selectors = $parser->parse(sprintf(':nth-child(%s)', $series));
+        $selectors = $parser->parse(\sprintf(':nth-child(%s)', $series));
         $this->assertCount(1, $selectors);
 
         /** @var FunctionNode $function */
@@ -84,16 +82,16 @@ class ParserTest extends TestCase
     public function testParseSeriesException($series)
     {
         $parser = new Parser();
-        $selectors = $parser->parse(sprintf(':nth-child(%s)', $series));
+        $selectors = $parser->parse(\sprintf(':nth-child(%s)', $series));
         $this->assertCount(1, $selectors);
 
         /** @var FunctionNode $function */
         $function = $selectors[0]->getTree();
-        $this->expectException('Symfony\Component\CssSelector\Exception\SyntaxErrorException');
+        $this->expectException(SyntaxErrorException::class);
         Parser::parseSeries($function->getArguments());
     }
 
-    public function getParserTestData()
+    public static function getParserTestData()
     {
         return [
             ['*', ['Element[*]']],
@@ -138,10 +136,30 @@ class ParserTest extends TestCase
             ['div:not(div.foo)', ['Negation[Element[div]:not(Class[Element[div].foo])]']],
             ['td ~ th', ['CombinedSelector[Element[td] ~ Element[th]]']],
             ['.foo[data-bar][data-baz=0]', ["Attribute[Attribute[Class[Element[*].foo][data-bar]][data-baz = '0']]"]],
+            ['div#foo\.bar', ['Hash[Element[div]#foo.bar]']],
+            ['div.w-1\/3', ['Class[Element[div].w-1/3]']],
+            ['#test\:colon', ['Hash[Element[*]#test:colon]']],
+            [".a\xc1b", ["Class[Element[*].a\xc1b]"]],
+            // unicode escape: \22 == "
+            ['*[aval="\'\22\'"]', ['Attribute[Element[*][aval = \'\'"\'\']]']],
+            ['*[aval="\'\22 2\'"]', ['Attribute[Element[*][aval = \'\'"2\'\']]']],
+            // unicode escape: \20 ==  (space)
+            ['*[aval="\'\20  \'"]', ['Attribute[Element[*][aval = \'\'  \'\']]']],
+            ["*[aval=\"'\\20\r\n '\"]", ['Attribute[Element[*][aval = \'\'  \'\']]']],
+            [':scope > foo', ['CombinedSelector[Pseudo[Element[*]:scope] > Element[foo]]']],
+            [':scope > foo bar > div', ['CombinedSelector[CombinedSelector[CombinedSelector[Pseudo[Element[*]:scope] > Element[foo]] <followed> Element[bar]] > Element[div]]']],
+            [':scope > #foo #bar', ['CombinedSelector[CombinedSelector[Pseudo[Element[*]:scope] > Hash[Element[*]#foo]] <followed> Hash[Element[*]#bar]]']],
+            [':scope', ['Pseudo[Element[*]:scope]']],
+            ['foo bar, :scope > div', ['CombinedSelector[Element[foo] <followed> Element[bar]]', 'CombinedSelector[Pseudo[Element[*]:scope] > Element[div]]']],
+            ['foo bar,:scope > div', ['CombinedSelector[Element[foo] <followed> Element[bar]]', 'CombinedSelector[Pseudo[Element[*]:scope] > Element[div]]']],
+            ['div:is(.foo, #bar)', ['Matching[Element[div]:is(Selector[Class[Element[*].foo]], Selector[Hash[Element[*]#bar]])]']],
+            [':is(:hover, :visited)', ['Matching[Element[*]:is(Selector[Pseudo[Element[*]:hover]], Selector[Pseudo[Element[*]:visited]])]']],
+            ['div:where(.foo, #bar)', ['SpecificityAdjustment[Element[div]:where(Selector[Class[Element[*].foo]], Selector[Hash[Element[*]#bar]])]']],
+            [':where(:hover, :visited)', ['SpecificityAdjustment[Element[*]:where(Selector[Pseudo[Element[*]:hover]], Selector[Pseudo[Element[*]:visited]])]']],
         ];
     }
 
-    public function getParserExceptionTestData()
+    public static function getParserExceptionTestData()
     {
         return [
             ['attributes(href)/html/body/a', SyntaxErrorException::unexpectedToken('selector', new Token(Token::TYPE_DELIMITER, '(', 10))->getMessage()],
@@ -168,10 +186,12 @@ class ParserTest extends TestCase
             [':lang(fr', SyntaxErrorException::unexpectedToken('an argument', new Token(Token::TYPE_FILE_END, '', 8))->getMessage()],
             [':contains("foo', SyntaxErrorException::unclosedString(10)->getMessage()],
             ['foo!', SyntaxErrorException::unexpectedToken('selector', new Token(Token::TYPE_DELIMITER, '!', 3))->getMessage()],
+            [':scope > div :scope header', SyntaxErrorException::notAtTheStartOfASelector('scope')->getMessage()],
+            [':not(:not(a))', SyntaxErrorException::nestedNot()->getMessage()],
         ];
     }
 
-    public function getPseudoElementsTestData()
+    public static function getPseudoElementsTestData()
     {
         return [
             ['foo', 'Element[foo]', ''],
@@ -193,7 +213,7 @@ class ParserTest extends TestCase
         ];
     }
 
-    public function getSpecificityTestData()
+    public static function getSpecificityTestData()
     {
         return [
             ['*', 0],
@@ -218,10 +238,22 @@ class ParserTest extends TestCase
             ['foo::before', 2],
             ['foo:empty::before', 12],
             ['#lorem + foo#ipsum:first-child > bar:first-line', 213],
+            [':is(*)', 0],
+            [':is(foo)', 1],
+            [':is(.foo)', 10],
+            [':is(#foo)', 100],
+            [':is(#foo, :empty, foo)', 100],
+            ['#foo:is(#bar:empty)', 210],
+            [':where(*)', 0],
+            [':where(foo)', 0],
+            [':where(.foo)', 0],
+            [':where(#foo)', 0],
+            [':where(#foo, :empty, foo)', 0],
+            ['#foo:where(#bar:empty)', 100],
         ];
     }
 
-    public function getParseSeriesTestData()
+    public static function getParseSeriesTestData()
     {
         return [
             ['1n+3', 1, 3],
@@ -243,7 +275,7 @@ class ParserTest extends TestCase
         ];
     }
 
-    public function getParseSeriesExceptionTestData()
+    public static function getParseSeriesExceptionTestData()
     {
         return [
             ['foo'],

@@ -2,15 +2,14 @@
 
 namespace PhpParser;
 
-class CodeTestParser
-{
+class CodeTestParser {
     public function parseTest($code, $chunksPerTest) {
         $code = canonicalize($code);
 
         // evaluate @@{expr}@@ expressions
         $code = preg_replace_callback(
             '/@@\{(.*?)\}@@/',
-            function($matches) {
+            function ($matches) {
                 return eval('return ' . $matches[1] . ';');
             },
             $code
@@ -25,7 +24,7 @@ class CodeTestParser
         // multiple sections possible with always two forming a pair
         $chunks = array_chunk($parts, $chunksPerTest);
         $tests = [];
-        foreach ($chunks as $i => $chunk) {
+        foreach ($chunks as $chunk) {
             $lastPart = array_pop($chunk);
             list($lastPart, $mode) = $this->extractMode($lastPart);
             $tests[] = [$mode, array_merge($chunk, [$lastPart])];
@@ -48,10 +47,10 @@ class CodeTestParser
             }
             $result .= $lastPart;
         }
-        return $result;
+        return $result . "\n";
     }
 
-    private function extractMode($expected) {
+    private function extractMode(string $expected): array {
         $firstNewLine = strpos($expected, "\n");
         if (false === $firstNewLine) {
             $firstNewLine = strlen($expected);
@@ -62,7 +61,7 @@ class CodeTestParser
             return [$expected, null];
         }
 
-        $expected = (string) substr($expected, $firstNewLine + 1);
+        $expected = substr($expected, $firstNewLine + 1);
         return [$expected, substr($firstLine, 2)];
     }
 }

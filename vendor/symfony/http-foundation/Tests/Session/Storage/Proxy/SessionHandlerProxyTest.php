@@ -11,7 +11,10 @@
 
 namespace Symfony\Component\HttpFoundation\Tests\Session\Storage\Proxy;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Session\Storage\Handler\StrictSessionHandler;
+use Symfony\Component\HttpFoundation\Session\Storage\NativeSessionStorage;
 use Symfony\Component\HttpFoundation\Session\Storage\Proxy\SessionHandlerProxy;
 
 /**
@@ -20,30 +23,19 @@ use Symfony\Component\HttpFoundation\Session\Storage\Proxy\SessionHandlerProxy;
  * @author Drak <drak@zikula.org>
  *
  * @runTestsInSeparateProcesses
+ *
  * @preserveGlobalState disabled
  */
 class SessionHandlerProxyTest extends TestCase
 {
-    /**
-     * @var \PHPUnit\Framework\MockObject\Matcher
-     */
-    private $mock;
+    private MockObject&\SessionHandlerInterface $mock;
 
-    /**
-     * @var SessionHandlerProxy
-     */
-    private $proxy;
+    private SessionHandlerProxy $proxy;
 
     protected function setUp(): void
     {
-        $this->mock = $this->getMockBuilder('SessionHandlerInterface')->getMock();
+        $this->mock = $this->createMock(\SessionHandlerInterface::class);
         $this->proxy = new SessionHandlerProxy($this->mock);
-    }
-
-    protected function tearDown(): void
-    {
-        $this->mock = null;
-        $this->proxy = null;
     }
 
     public function testOpenTrue()
@@ -93,7 +85,9 @@ class SessionHandlerProxyTest extends TestCase
     public function testRead()
     {
         $this->mock->expects($this->once())
-            ->method('read');
+            ->method('read')
+            ->willReturn('foo')
+        ;
 
         $this->proxy->read('id');
     }
@@ -101,33 +95,36 @@ class SessionHandlerProxyTest extends TestCase
     public function testWrite()
     {
         $this->mock->expects($this->once())
-            ->method('write');
+            ->method('write')
+            ->willReturn(true)
+        ;
 
-        $this->proxy->write('id', 'data');
+        $this->assertTrue($this->proxy->write('id', 'data'));
     }
 
     public function testDestroy()
     {
         $this->mock->expects($this->once())
-            ->method('destroy');
+            ->method('destroy')
+            ->willReturn(true)
+        ;
 
-        $this->proxy->destroy('id');
+        $this->assertTrue($this->proxy->destroy('id'));
     }
 
     public function testGc()
     {
         $this->mock->expects($this->once())
-            ->method('gc');
+            ->method('gc')
+            ->willReturn(1)
+        ;
 
         $this->proxy->gc(86400);
     }
 
-    /**
-     * @requires PHPUnit 5.1
-     */
     public function testValidateId()
     {
-        $mock = $this->getMockBuilder(['SessionHandlerInterface', 'SessionUpdateTimestampHandlerInterface'])->getMock();
+        $mock = $this->createMock(TestSessionHandler::class);
         $mock->expects($this->once())
             ->method('validateId');
 
@@ -137,12 +134,9 @@ class SessionHandlerProxyTest extends TestCase
         $this->assertTrue($this->proxy->validateId('id'));
     }
 
-    /**
-     * @requires PHPUnit 5.1
-     */
     public function testUpdateTimestamp()
     {
-        $mock = $this->getMockBuilder(['SessionHandlerInterface', 'SessionUpdateTimestampHandlerInterface'])->getMock();
+        $mock = $this->createMock(TestSessionHandler::class);
         $mock->expects($this->once())
             ->method('updateTimestamp')
             ->willReturn(false);
@@ -151,8 +145,31 @@ class SessionHandlerProxyTest extends TestCase
         $proxy->updateTimestamp('id', 'data');
 
         $this->mock->expects($this->once())
-            ->method('write');
+            ->method('write')
+            ->willReturn(true)
+        ;
 
         $this->proxy->updateTimestamp('id', 'data');
     }
+
+    /**
+     * @dataProvider provideNativeSessionStorageHandler
+     */
+    public function testNativeSessionStorageSaveHandlerName($handler)
+    {
+        $this->assertSame('files', (new NativeSessionStorage([], $handler))->getSaveHandler()->getSaveHandlerName());
+    }
+
+    public static function provideNativeSessionStorageHandler()
+    {
+        return [
+            [new \SessionHandler()],
+            [new StrictSessionHandler(new \SessionHandler())],
+            [new SessionHandlerProxy(new StrictSessionHandler(new \SessionHandler()))],
+        ];
+    }
+}
+
+abstract class TestSessionHandler implements \SessionHandlerInterface, \SessionUpdateTimestampHandlerInterface
+{
 }

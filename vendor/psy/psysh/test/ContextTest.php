@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -12,8 +12,9 @@
 namespace Psy\Test;
 
 use Psy\Context;
+use Psy\Shell;
 
-class ContextTest extends \PHPUnit\Framework\TestCase
+class ContextTest extends TestCase
 {
     public function testGet()
     {
@@ -32,10 +33,10 @@ class ContextTest extends \PHPUnit\Framework\TestCase
         $this->assertNull($context->get('_'));
         $this->assertNull($context->getReturnValue());
 
-        $this->assertEquals(['_' => null], $context->getAll());
+        $this->assertSame(['_' => null], $context->getAll());
 
         $e = new \Exception('eeeeeee');
-        $obj = new \StdClass();
+        $obj = new \stdClass();
         $context->setLastException($e);
         $context->setLastStdout('out');
         $context->setBoundObject($obj);
@@ -64,14 +65,14 @@ class ContextTest extends \PHPUnit\Framework\TestCase
             '__dir'       => 'dir',
         ];
 
-        $this->assertEquals($expected, $context->getAll());
+        $this->assertSame($expected, $context->getAll());
     }
 
     public function testSetAll()
     {
         $context = new Context();
 
-        $baz = new \StdClass();
+        $baz = new \stdClass();
         $vars = [
             'foo' => 'Foo',
             'bar' => 123,
@@ -94,23 +95,26 @@ class ContextTest extends \PHPUnit\Framework\TestCase
 
         $context->setAll($vars);
 
-        $this->assertEquals('Foo', $context->get('foo'));
-        $this->assertEquals(123, $context->get('bar'));
+        $this->assertSame('Foo', $context->get('foo'));
+        $this->assertSame(123, $context->get('bar'));
         $this->assertSame($baz, $context->get('baz'));
 
-        $this->assertEquals(['foo' => 'Foo', 'bar' => 123, 'baz' => $baz, '_' => null], $context->getAll());
+        $this->assertSame(['foo' => 'Foo', 'bar' => 123, 'baz' => $baz, '_' => null], $context->getAll());
     }
 
     /**
      * @dataProvider specialNames
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessageRegEx /Unknown variable: \$\w+/
      */
     public function testSetAllDoesNotSetSpecial($name)
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessageMatches('/Unknown variable: \$\w+/');
+
         $context = new Context();
         $context->setAll([$name => 'fail']);
         $context->get($name);
+
+        $this->fail();
     }
 
     public function specialNames()
@@ -137,10 +141,10 @@ class ContextTest extends \PHPUnit\Framework\TestCase
 
         $val = 'some string';
         $context->setReturnValue($val);
-        $this->assertEquals($val, $context->getReturnValue());
-        $this->assertEquals($val, $context->get('_'));
+        $this->assertSame($val, $context->getReturnValue());
+        $this->assertSame($val, $context->get('_'));
 
-        $obj = new \StdClass();
+        $obj = new \stdClass();
         $context->setReturnValue($obj);
         $this->assertSame($obj, $context->getReturnValue());
         $this->assertSame($obj, $context->get('_'));
@@ -158,32 +162,34 @@ class ContextTest extends \PHPUnit\Framework\TestCase
         $this->assertSame($e, $context->get('_e'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage No most-recent exception
-     */
     public function testLastExceptionThrowsSometimes()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('No most-recent exception');
+
         $context = new Context();
         $context->getLastException();
+
+        $this->fail();
     }
 
     public function testLastStdout()
     {
         $context = new Context();
         $context->setLastStdout('ouuuuut');
-        $this->assertEquals('ouuuuut', $context->getLastStdout());
-        $this->assertEquals('ouuuuut', $context->get('__out'));
+        $this->assertSame('ouuuuut', $context->getLastStdout());
+        $this->assertSame('ouuuuut', $context->get('__out'));
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage No most-recent output
-     */
     public function testLastStdoutThrowsSometimes()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('No most-recent output');
+
         $context = new Context();
         $context->getLastStdout();
+
+        $this->fail();
     }
 
     public function testBoundObject()
@@ -191,7 +197,7 @@ class ContextTest extends \PHPUnit\Framework\TestCase
         $context = new Context();
         $this->assertNull($context->getBoundObject());
 
-        $obj = new \StdClass();
+        $obj = new \stdClass();
         $context->setBoundObject($obj);
         $this->assertSame($obj, $context->getBoundObject());
         $this->assertSame($obj, $context->get('this'));
@@ -200,14 +206,15 @@ class ContextTest extends \PHPUnit\Framework\TestCase
         $this->assertNull($context->getBoundObject());
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage Unknown variable: $this
-     */
     public function testBoundObjectThrowsSometimes()
     {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Unknown variable: $this');
+
         $context = new Context();
         $context->get('this');
+
+        $this->fail();
     }
 
     public function testBoundClass()
@@ -218,15 +225,15 @@ class ContextTest extends \PHPUnit\Framework\TestCase
         $context->setBoundClass('');
         $this->assertNull($context->getBoundClass());
 
-        $context->setBoundClass('Psy\Shell');
-        $this->assertEquals('Psy\Shell', $context->getBoundClass());
+        $context->setBoundClass(Shell::class);
+        $this->assertSame(Shell::class, $context->getBoundClass());
 
-        $context->setBoundObject(new \StdClass());
+        $context->setBoundObject(new \stdClass());
         $this->assertNotNull($context->getBoundObject());
         $this->assertNull($context->getBoundClass());
 
-        $context->setBoundClass('Psy\Shell');
-        $this->assertEquals('Psy\Shell', $context->getBoundClass());
+        $context->setBoundClass(Shell::class);
+        $this->assertSame(Shell::class, $context->getBoundClass());
         $this->assertNull($context->getBoundObject());
 
         $context->setBoundClass(null);
@@ -236,28 +243,28 @@ class ContextTest extends \PHPUnit\Framework\TestCase
 
     public function testCommandScopeVariables()
     {
-        $__function  = 'donkey';
-        $__method    = 'diddy';
-        $__class     = 'cranky';
+        $__function = 'donkey';
+        $__method = 'diddy';
+        $__class = 'cranky';
         $__namespace = 'funky';
-        $__file      = 'candy';
-        $__line      = 'dixie';
-        $__dir       = 'wrinkly';
+        $__file = 'candy';
+        $__line = 'dixie';
+        $__dir = 'wrinkly';
 
         $vars = \compact('__function', '__method', '__class', '__namespace', '__file', '__line', '__dir');
 
         $context = new Context();
         $context->setCommandScopeVariables($vars);
 
-        $this->assertEquals($vars, $context->getCommandScopeVariables());
+        $this->assertSame($vars, $context->getCommandScopeVariables());
 
-        $this->assertEquals($__function, $context->get('__function'));
-        $this->assertEquals($__method, $context->get('__method'));
-        $this->assertEquals($__class, $context->get('__class'));
-        $this->assertEquals($__namespace, $context->get('__namespace'));
-        $this->assertEquals($__file, $context->get('__file'));
-        $this->assertEquals($__line, $context->get('__line'));
-        $this->assertEquals($__dir, $context->get('__dir'));
+        $this->assertSame($__function, $context->get('__function'));
+        $this->assertSame($__method, $context->get('__method'));
+        $this->assertSame($__class, $context->get('__class'));
+        $this->assertSame($__namespace, $context->get('__namespace'));
+        $this->assertSame($__file, $context->get('__file'));
+        $this->assertSame($__line, $context->get('__line'));
+        $this->assertSame($__dir, $context->get('__dir'));
 
         $someVars = \compact('__function', '__namespace', '__file', '__line', '__dir');
         $context->setCommandScopeVariables($someVars);
@@ -267,7 +274,7 @@ class ContextTest extends \PHPUnit\Framework\TestCase
     {
         $context = new Context();
 
-        $this->assertEquals(
+        $this->assertSame(
             ['__function', '__method', '__class', '__namespace', '__file', '__line', '__dir'],
             $context->getUnusedCommandScopeVariableNames()
         );
@@ -280,7 +287,7 @@ class ContextTest extends \PHPUnit\Framework\TestCase
             '__dir'       => 'qux',
         ]);
 
-        $this->assertEquals(
+        $this->assertSame(
             ['__method', '__class'],
             \array_values($context->getUnusedCommandScopeVariableNames())
         );

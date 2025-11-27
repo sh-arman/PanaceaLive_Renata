@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,7 +13,7 @@ namespace Psy\Test;
 
 use Psy\CodeCleaner;
 
-class CodeCleanerTest extends \PHPUnit\Framework\TestCase
+class CodeCleanerTest extends TestCase
 {
     /**
      * @dataProvider semicolonCodeProvider
@@ -43,7 +43,7 @@ class CodeCleanerTest extends \PHPUnit\Framework\TestCase
      */
     public function testUnclosedStatements(array $lines, $isUnclosed)
     {
-        $cc  = new CodeCleaner();
+        $cc = new CodeCleaner();
         $res = $cc->clean($lines);
 
         if ($isUnclosed) {
@@ -79,11 +79,7 @@ class CodeCleanerTest extends \PHPUnit\Framework\TestCase
      */
     public function testMoreUnclosedStatements(array $lines)
     {
-        if (\defined('HHVM_VERSION')) {
-            $this->markTestSkipped('HHVM not supported.');
-        }
-
-        $cc  = new CodeCleaner();
+        $cc = new CodeCleaner();
         $res = $cc->clean($lines);
 
         $this->assertFalse($res);
@@ -102,20 +98,19 @@ class CodeCleanerTest extends \PHPUnit\Framework\TestCase
 
     /**
      * @dataProvider invalidStatementsProvider
-     * @expectedException \Psy\Exception\ParseErrorException
      */
     public function testInvalidStatementsThrowParseErrors($code)
     {
+        $this->expectException(\Psy\Exception\ParseErrorException::class);
+
         $cc = new CodeCleaner();
         $cc->clean([$code]);
+
+        $this->fail();
     }
 
     public function invalidStatementsProvider()
     {
-        // n.b. We used to check that `var_dump(1,2,)` failed, but PHP Parser
-        // 4.x backported trailing comma function calls from PHP 7.3 for free!
-        // so we're not going to spend too much time worrying about it :)
-
         return [
             ['function "what'],
             ["function 'what"],
@@ -127,5 +122,63 @@ class CodeCleanerTest extends \PHPUnit\Framework\TestCase
             ['$foo "bar'],
             ['$foo \'bar'],
         ];
+    }
+
+    public function testLooksLikeActionWithAssignment()
+    {
+        $cc = new CodeCleaner();
+        $this->assertTrue($cc->codeLooksLikeAction(['$x = new stdClass()']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$x += 5']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$x[] = 42']));
+    }
+
+    public function testLooksLikeActionWithMethodCalls()
+    {
+        $cc = new CodeCleaner();
+        $this->assertTrue($cc->codeLooksLikeAction(['$obj->setName("test")']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$model->save()']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$obj->set_name("test")']));
+    }
+
+    public function testLooksLikeInspectionWithVariable()
+    {
+        $cc = new CodeCleaner();
+        $this->assertFalse($cc->codeLooksLikeAction(['$x']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$obj->property']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$obj["foo"][$bar]']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x ?? []']));
+    }
+
+    public function testLooksLikeInspectionWithGetters()
+    {
+        $cc = new CodeCleaner();
+        $this->assertFalse($cc->codeLooksLikeAction(['$obj->getName()']));
+        $this->assertFalse($cc->codeLooksLikeAction(['User::find(1)']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x->isValid()']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x->toArray()']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x->asString()']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x->is_valid()']));
+        $this->assertFalse($cc->codeLooksLikeAction(['$x->to_array()']));
+    }
+
+    public function testPrefixMatchingAvoidsFalsePositives()
+    {
+        $cc = new CodeCleaner();
+        // These should NOT match "is", "to", "as" prefixes, and since they don't
+        // match inspection prefixes, they're treated as actions
+        $this->assertTrue($cc->codeLooksLikeAction(['$x->issue()']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$x->top()']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$x->asset()']));
+        $this->assertTrue($cc->codeLooksLikeAction(['$x->total()']));
+    }
+
+    public function testActionDetectionWithNamespace()
+    {
+        $cc = new CodeCleaner();
+        // Code within a namespace should still be detected correctly
+        $this->assertTrue($cc->codeLooksLikeAction(['namespace Foo; $x = 1']));
+        $this->assertFalse($cc->codeLooksLikeAction(['namespace Foo; $x']));
+        $this->assertTrue($cc->codeLooksLikeAction(['namespace Foo; $obj->setName("test")']));
+        $this->assertFalse($cc->codeLooksLikeAction(['namespace Foo; $obj->getName()']));
     }
 }

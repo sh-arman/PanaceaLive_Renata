@@ -23,15 +23,9 @@ use Symfony\Component\HttpFoundation\Session\Storage\MockFileSessionStorage;
  */
 class MockFileSessionStorageTest extends TestCase
 {
-    /**
-     * @var string
-     */
-    private $sessionDir;
+    protected MockFileSessionStorage $storage;
 
-    /**
-     * @var MockFileSessionStorage
-     */
-    protected $storage;
+    private string $sessionDir;
 
     protected function setUp(): void
     {
@@ -41,11 +35,9 @@ class MockFileSessionStorageTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->sessionDir = null;
-        $this->storage = null;
-        array_map('unlink', glob($this->sessionDir.'/*.session'));
+        array_map('unlink', glob($this->sessionDir.'/*'));
         if (is_dir($this->sessionDir)) {
-            rmdir($this->sessionDir);
+            @rmdir($this->sessionDir);
         }
     }
 
@@ -109,12 +101,12 @@ class MockFileSessionStorageTest extends TestCase
 
     public function testSaveWithoutStart()
     {
-        $this->expectException('RuntimeException');
+        $this->expectException(\RuntimeException::class);
         $storage1 = $this->getStorage();
         $storage1->save();
     }
 
-    private function getStorage()
+    private function getStorage(): MockFileSessionStorage
     {
         $storage = new MockFileSessionStorage($this->sessionDir);
         $storage->registerBag(new FlashBag());

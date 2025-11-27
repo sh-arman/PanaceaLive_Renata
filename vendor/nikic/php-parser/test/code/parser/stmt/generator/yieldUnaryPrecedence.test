@@ -10,6 +10,8 @@ function gen() {
 -----
 array(
     0: Stmt_Function(
+        attrGroups: array(
+        )
         byRef: false
         name: Identifier(
             name: gen
@@ -22,7 +24,7 @@ array(
                 expr: Expr_Yield(
                     key: null
                     value: Expr_UnaryPlus(
-                        expr: Scalar_LNumber(
+                        expr: Scalar_Int(
                             value: 1
                         )
                     )
@@ -32,7 +34,7 @@ array(
                 expr: Expr_Yield(
                     key: null
                     value: Expr_UnaryMinus(
-                        expr: Scalar_LNumber(
+                        expr: Scalar_Int(
                             value: 1
                         )
                     )
@@ -45,7 +47,7 @@ array(
                         value: null
                     )
                     right: Expr_UnaryMinus(
-                        expr: Scalar_LNumber(
+                        expr: Scalar_Int(
                             value: 1
                         )
                     )

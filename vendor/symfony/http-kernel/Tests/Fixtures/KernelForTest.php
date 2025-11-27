@@ -12,36 +12,46 @@
 namespace Symfony\Component\HttpKernel\Tests\Fixtures;
 
 use Symfony\Component\Config\Loader\LoaderInterface;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\HttpKernel\Kernel;
 
 class KernelForTest extends Kernel
 {
-    public function getBundleMap()
+    public function __construct(string $environment, bool $debug, private readonly bool $fakeContainer = true)
     {
-        return $this->bundleMap;
+        parent::__construct($environment, $debug);
     }
 
-    public function registerBundles()
+    public function getBundleMap(): array
     {
         return [];
     }
 
-    public function registerContainerConfiguration(LoaderInterface $loader)
+    public function registerBundles(): iterable
+    {
+        return [];
+    }
+
+    public function registerContainerConfiguration(LoaderInterface $loader): void
     {
     }
 
-    public function isBooted()
+    public function isBooted(): bool
     {
         return $this->booted;
     }
 
-    public function getCacheDir()
+    public function getProjectDir(): string
     {
-        return $this->getProjectDir().'/Tests/Fixtures/cache.'.$this->environment;
+        return __DIR__;
     }
 
-    public function getLogDir()
+    protected function initializeContainer(): void
     {
-        return $this->getProjectDir().'/Tests/Fixtures/logs';
+        if ($this->fakeContainer) {
+            $this->container = new ContainerBuilder();
+        } else {
+            parent::initializeContainer();
+        }
     }
 }

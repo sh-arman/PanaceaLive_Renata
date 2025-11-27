@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,36 +13,38 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\FinalClassPass;
 
+/**
+ * @group isolation-fail
+ */
 class FinalClassPassTest extends CodeCleanerTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new FinalClassPass());
     }
 
     /**
      * @dataProvider invalidStatements
-     * @expectedException \Psy\Exception\FatalErrorException
      */
     public function testProcessStatementFails($code)
     {
+        $this->expectException(\Psy\Exception\FatalErrorException::class);
         $this->parseAndTraverse($code);
+
+        $this->fail();
     }
 
     public function invalidStatements()
     {
-        $data = [
+        return [
             ['final class A {} class B extends A {}'],
             ['class A {} final class B extends A {} class C extends B {}'],
-            // array('namespace A { final class B {} } namespace C { class D extends \\A\\B {} }'),
+            ['class A extends \\Closure {}'],
+            // ['namespace A { final class B {} } namespace C { class D extends \\A\\B {} }'],
         ];
-
-        if (!\defined('HHVM_VERSION')) {
-            // For some reason Closure isn't final in HHVM?
-            $data[] = ['class A extends \\Closure {}'];
-        }
-
-        return $data;
     }
 
     /**

@@ -27,7 +27,7 @@ class FilenameFilterIteratorTest extends IteratorTestCase
         $this->assertIterator($expected, $iterator);
     }
 
-    public function getAcceptData()
+    public static function getAcceptData()
     {
         return [
             [['test.*'], [], ['test.php', 'test.py']],
@@ -37,18 +37,5 @@ class FilenameFilterIteratorTest extends IteratorTestCase
             [['/\.php$/'], [], ['test.php', 'foo.php']],
             [[], ['/\.php$/'], ['test.py']],
         ];
-    }
-}
-
-class InnerNameIterator extends \ArrayIterator
-{
-    public function current()
-    {
-        return new \SplFileInfo(parent::current());
-    }
-
-    public function getFilename()
-    {
-        return parent::current();
     }
 }

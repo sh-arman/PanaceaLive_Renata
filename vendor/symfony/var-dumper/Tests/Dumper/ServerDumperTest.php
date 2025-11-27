@@ -25,7 +25,7 @@ class ServerDumperTest extends TestCase
 
     public function testDumpForwardsToWrappedDumperWhenServerIsUnavailable()
     {
-        $wrappedDumper = $this->getMockBuilder(DataDumperInterface::class)->getMock();
+        $wrappedDumper = $this->createMock(DataDumperInterface::class);
 
         $dumper = new ServerDumper(self::VAR_DUMPER_SERVER, $wrappedDumper);
 
@@ -39,13 +39,17 @@ class ServerDumperTest extends TestCase
 
     public function testDump()
     {
-        $wrappedDumper = $this->getMockBuilder(DataDumperInterface::class)->getMock();
+        if ('\\' === \DIRECTORY_SEPARATOR) {
+            $this->markTestSkipped('Skip transient test on Windows');
+        }
+
+        $wrappedDumper = $this->createMock(DataDumperInterface::class);
         $wrappedDumper->expects($this->never())->method('dump'); // test wrapped dumper is not used
 
         $cloner = new VarCloner();
         $data = $cloner->cloneVar('foo');
         $dumper = new ServerDumper(self::VAR_DUMPER_SERVER, $wrappedDumper, [
-            'foo_provider' => new class() implements ContextProviderInterface {
+            'foo_provider' => new class implements ContextProviderInterface {
                 public function getContext(): ?array
                 {
                     return ['foo'];
@@ -79,7 +83,7 @@ class ServerDumperTest extends TestCase
 ]
 %d
 DUMP
-        , $dumped);
+            , $dumped);
     }
 
     private function getServerProcess(): Process
@@ -88,8 +92,7 @@ DUMP
             'COMPONENT_ROOT' => __DIR__.'/../../',
             'VAR_DUMPER_SERVER' => self::VAR_DUMPER_SERVER,
         ]);
-        $process->inheritEnvironmentVariables(true);
 
-        return $process->setTimeout(9);
+        return $process->setTimeout('\\' === \DIRECTORY_SEPARATOR ? 19 : 9);
     }
 }

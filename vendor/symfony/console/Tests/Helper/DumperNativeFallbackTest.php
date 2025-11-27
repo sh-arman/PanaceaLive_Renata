@@ -37,12 +37,12 @@ class DumperNativeFallbackTest extends TestCase
      */
     public function testInvoke($variable, $primitiveString)
     {
-        $dumper = new Dumper($this->getMockBuilder(OutputInterface::class)->getMock());
+        $dumper = new Dumper($this->createMock(OutputInterface::class));
 
         $this->assertSame($primitiveString, $dumper($variable));
     }
 
-    public function provideVariables()
+    public static function provideVariables()
     {
         return [
             [null, 'null'],

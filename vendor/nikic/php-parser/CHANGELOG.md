@@ -1,7 +1,642 @@
-Version 4.2.5-dev
------------------
+Version 5.6.2 (2025-10-21)
+--------------------------
 
-Nothing yet.
+### Fixed
+
+* Fixed formatting-preserving pretty-printing when changing the visibility modifier on a node that
+  has attributes.
+* Fixed `chr()` deprecation warning on PHP 8.4
+
+### Added
+
+* Added `Param::isFinal()` method.
+
+Version 5.6.1 (2025-08-13)
+--------------------------
+
+### Fixed
+
+* Fixed `Param::isPublic()` for parameters with asymmetric visibility keyword.
+* Fixed PHP 8.5 deprecation warnings for `SplObjectStorage` methods.
+
+### Added
+
+* Added cast `kind` attributes to `Cast\Int_`, `Cast\Bool_` and `Cast\String_`.
+  These allow distinguishing the deprecated versions of these casts.
+
+Version 5.6.0 (2025-07-27)
+--------------------------
+
+### Added
+
+* [8.5] Added support for `clone` with arbitrary function arguments. This will be parsed as an
+  `Expr\FuncCall` node, instead of the usual `Expr\Clone_` node.
+* [8.5] Permit declaration of `function clone` for use in stubs.
+* [8.5] Added support for the pipe operator, represented by `Expr\BinaryOp\Pipe`.
+* [8.5] Added support for the `(void)` cast, represented by `Expr\Cast\Void_`.
+* [8.5] Added support for the `final` modifier on promoted properties.
+* Added `CallLike::getArg()` to fetch an argument by position and name.
+
+Version 5.5.0 (2025-05-31)
+--------------------------
+
+### Added
+
+* [8.5] Added support for attributes on constants. `Stmt\Const_` now has an `attrGroups` subnode.
+* Added `weakReferences` option to `NodeConnectingVisitor` and `ParentConnectingVisitor`. This
+  will create the parent/next/prev references as WeakReferences, to avoid making the AST cyclic
+  and thus increasing GC pressure.
+
+### Changed
+
+* Attributes on parameters are now printed on separate lines if the pretty printer target version
+  is PHP 7.4 or older (which is the default). This allows them to be interpreted as comments,
+  instead of causing a parse error. Specify a target version of PHP 8.0 or newer to restore the
+  previous behavior.
+
+Version 5.4.0 (2024-12-30)
+--------------------------
+
+### Added
+
+* Added `Property::isAbstract()` and `Property::isFinal()` methods.
+* Added `PropertyHook::isFinal()` method.
+* Emit an error if property hook is used on declaration with multiple properties.
+
+### Fixed
+
+* Make legacy class aliases compatible with classmap-authoritative autoloader.
+* `Param::isPromoted()` and `Param::isPublic()` now returns true for parameters that have property
+  hooks but no explicit visibility modifier.
+* `PropertyHook::getStmts()` now correctly desugars short `set` hooks. `set => $value` will be
+  expanded to `set { $this->propertyName = $value; }`. This requires the `propertyName` attribute
+  on the hook to be set, which is now also set by the parser. If the attribute is not set,
+  `getStmts()` will throw an error for short set hooks, as it is not possible to produce a correct
+  desugaring.
+
+Version 5.3.1 (2024-10-08)
+--------------------------
+
+### Added
+
+* Added support for declaring functions with name `exit` or `die`, to allow their use in stubs.
+
+Version 5.3.0 (2024-09-29)
+--------------------------
+
+### Added
+
+* Added `indent` option to pretty printer, which can be used to specify the indentation to use
+  (defaulting to four spaces). This also allows using tab indentation.
+
+### Fixed
+
+* Resolve names in `PropertyHook`s in the `NameResolver`.
+* Include the trailing semicolon inside `Stmt\GroupUse` nodes, making them consistent with
+  `Stmt\Use_` nodes.
+* Fixed indentation sometimes becoming negative in formatting-preserving pretty printer, resulting
+  in `ValueError`s.
+
+Version 5.2.0 (2024-09-15)
+--------------------------
+
+### Added
+
+* [8.4] Added support for `__PROPERTY__` magic constant, represented using a
+  `Node\Scalar\MagicConst\Property` node.
+* [8.4] Added support for property hooks, which are represented using a new `hooks` subnode on
+  `Node\Stmt\Property` and `Node\Param`, which contains an array of `Node\PropertyHook`.
+* [8.4] Added support for asymmetric visibility modifiers. Property `flags` can now hold the
+  additional bits `Modifiers::PUBLIC_SET`, `Modifiers::PROTECTED_SET` and `Modifiers::PRIVATE_SET`.
+* [8.4] Added support for generalized exit function. For backwards compatibility, exit without
+  argument or a single plain argument continues to use a `Node\Expr\Exit_` node. Otherwise (e.g.
+  if a named argument is used) it will be represented as a plain `Node\Expr\FuncCall`.
+* Added support for passing enum values to various builder methods, like `BuilderFactory::val()`.
+
+### Removed
+
+* Removed support for alternative array syntax `$array{0}` from the PHP 8 parser. It is still
+  supported by the PHP 7 parser. This is necessary in order to support property hooks.
+
+Version 5.1.0 (2024-07-01)
+--------------------------
+
+### Added
+
+* [8.4] Added support for dereferencing `new` expressions without parentheses.
+
+### Fixed
+
+* Fixed redundant parentheses being added when pretty printing ternary expressions.
+
+### Changed
+
+* Made some phpdoc types more precise.
+
+Version 5.0.2 (2024-03-05)
+--------------------------
+
+### Fixed
+
+* Fix handling of indentation on next line after opening PHP tag in formatting-preserving pretty
+printer.
+
+### Changed
+
+* Avoid cyclic references in `Parser` objects. This means that no longer used parser objects are
+  immediately destroyed now, instead of requiring cycle GC.
+* Update `PhpVersion::getNewestSupported()` to report PHP 8.3 instead of PHP 8.2.
+
+Version 5.0.1 (2024-02-21)
+--------------------------
+
+### Changed
+
+* Added check to detect use of PHP-Parser with libraries that define `T_*` compatibility tokens
+  with incorrect type (such as string instead of int). This would lead to `TypeError`s down the
+  line. Now an `Error` will be thrown early to indicate the problem.
+
+Version 5.0.0 (2024-01-07)
+--------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Fixed
+
+* Fixed parent class of `PropertyItem` and `UseItem`.
+
+Version 5.0.0-rc1 (2023-12-20)
+------------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Fixed
+
+* Fixed parsing of empty files.
+
+### Added
+
+* Added support for printing additional attributes (like `kind`) in `NodeDumper`.
+* Added `rawValue` attribute to `InterpolatedStringPart` and heredoc/nowdoc `String_`s, which
+  provides the original, unparsed value. It was previously only available for non-interpolated
+  single/double quoted strings.
+* Added `Stmt\Block` to represent `{}` code blocks. Previously, such code blocks were flattened
+  into the parent statements array. `Stmt\Block` will not be created for structures that are
+  typically used with code blocks, for example `if ($x) { $y; }` will be represented as previously,
+  while `if ($x) { { $x; } }` will have an extra `Stmt\Block` wrapper.
+
+### Changed
+
+* Use visitor to assign comments. This fixes the long-standing issue where comments were assigned
+  to all nodes sharing a starting position. Now only the outer-most node will hold the comments.
+* Don't parse unicode escape sequences when targeting PHP < 7.0.
+* Improve NodeDumper performance for large dumps.
+
+### Removed
+
+* Removed `Stmt\Throw_` node, use `Expr\Throw_` inside `Stmt\Expression` instead.
+* Removed `ParserFactory::create()`.
+
+Version 5.0.0-beta1 (2023-09-17)
+--------------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Added
+
+* Visitors can now be passed directly to the `NodeTraverser` constructor. A separate call to
+  `addVisitor()` is no longer required.
+
+### Changed
+
+* The minimum host PHP version is now PHP 7.4. It is still possible to parse code from older
+  versions. Property types have been added where possible.
+* The `Lexer` no longer accepts options. `Lexer\Emulative` only accepts a `PhpVersion`. The
+  `startLexing()`, `getTokens()` and `handleHaltCompiler()` methods have been removed. Instead,
+  there is a single method `tokenize()` returning the tokens.
+* The `Parser::getLexer()` method has been replaced by `Parser::getTokens()`.
+* Attribute handling has been moved from the lexer to the parser, and is no longer configurable.
+  The comments, startLine, endLine, startTokenPos, endTokenPos, startFilePos, and endFilePos
+  attributes will always be added.
+* The pretty printer now defaults to PHP 7.4 as the target version.
+* The pretty printer now indents heredoc/nowdoc strings if the target version is >= 7.3
+  (flexible heredoc/nowdoc).
+
+### Removed
+
+* The deprecated `Comment::getLine()`, `Comment::getTokenPos()` and `Comment::getFilePos()` methods
+  have been removed. Use `Comment::getStartLine()`, `Comment::getStartTokenPos()` and
+  `Comment::getStartFilePos()` instead.
+
+### Deprecated
+
+* The `Node::getLine()` method has been deprecated. Use `Node::getStartLine()` instead.
+
+Version 5.0.0-alpha3 (2023-06-24)
+---------------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Added
+
+* [PHP 8.3] Added support for typed constants.
+* [PHP 8.3] Added support for readonly anonymous classes.
+* Added support for `NodeVisitor::REPLACE_WITH_NULL`.
+* Added support for CRLF newlines in the pretty printer, using the new `newline` option.
+
+### Changed
+
+* Use PHP 7.1 as the default target version for the pretty printer.
+* Print `else if { }` instead of `else { if { } }`.
+* The `leaveNode()` method on visitors is now invoked in reverse order of `enterNode()`.
+* Moved `NodeTraverser::REMOVE_NODE` etc. to `NodeVisitor::REMOVE_NODE`. The old constants are still
+  available for compatibility.
+* The `Name` subnode `parts` has been replaced by `name`, which stores the name as a string rather
+  than an array of parts separated by namespace separators. The `getParts()` method returns the old
+  representation.
+* No longer accept strings for types in Node constructors. Instead, either an `Identifier`, `Name`
+  or `ComplexType` must be passed.
+* `Comment::getReformattedText()` now normalizes CRLF newlines to LF newlines.
+
+### Fixed
+
+* Don't trim leading whitespace in formatting preserving printer.
+* Treat DEL as a label character in the formatting preserving printer depending on the targeted
+  PHP version.
+* Fix error reporting in emulative lexer without explicitly specified error handler.
+* Gracefully handle non-contiguous array indices in the `Differ`.
+
+Version 5.0.0-alpha2 (2023-03-05)
+---------------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Added
+
+* [PHP 8.3] Added support for dynamic class constant fetch.
+* Added many additional type annotations. PhpStan is now used.
+* Added a fuzzing target for PHP-Fuzzer, which was how a lot of pretty printer bugs were found.
+* Added `isPromoted()`, `isPublic()`, `isProtected()`, `isPrivate()` and `isReadonly()` methods
+  on `Param`.
+* Added support for class constants in trait builder.
+* Added `PrettyPrinter` interface.
+* Added support for formatting preservation when toggling static modifiers.
+* The `php-parse` binary now accepts `-` as the file name, in which case it will read from stdin.
+
+### Fixed
+
+* The pretty printer now uses a more accurate treatment of unary operator precedence, and will only
+  wrap them in parentheses if required. This allowed fixing a number of other precedence related
+  bugs.
+* The pretty printer now respects the precedence of `clone`, `throw` and arrow functions.
+* The pretty printer no longer unconditionally wraps `yield` in parentheses, unless the target
+  version is set to older than PHP 7.0.
+* Fixed formatting preservation for alternative elseif/else syntax.
+* Fixed checks for when it is safe to print strings as heredoc/nowdoc to accommodate flexible
+  doc string semantics.
+* The pretty printer now prints parentheses around new/instanceof operands in all required
+  situations.
+* Similar, differences in allowed expressions on the LHS of `->` and `::` are now taken into account.
+* Fixed various cases where `\r` at the end of a doc string could be incorrectly merged into a CRLF
+  sequence with a following `\n`.
+* `__halt_compiler` is no longer recognized as a semi-reserved keyword, in line with PHP behavior.
+* `<?=` is no longer recognized as a semi-reserved keyword.
+* Fix handling of very large overflowing `\u` escape sequences.
+
+### Removed
+
+* Removed deprecated `Error` constructor taking a line number instead of an attributes array.
+
+Version 5.0.0-alpha1 (2022-09-04)
+---------------------------------
+
+See UPGRADE-5.0 for detailed migration instructions.
+
+### Changed
+
+* PHP 7.1 is now required to run PHP-Parser.
+* Formatting of the standard pretty printer has been adjusted to match PSR-12 more closely.
+* The internal token representation now uses a `PhpParser\Token` class, which is compatible with
+  PHP 8 token representation (`PhpToken`).
+* Destructuring is now always represented using `Expr\List_` nodes, even if it uses `[]` syntax.
+* Renamed a number of node classes, and moved things that were not real expressions/statements
+  outside the `Expr`/`Stmt` hierarchy. Compatibility shims for the old names have been retained.
+
+### Added
+
+* Added `PhpVersion` class, which is accepted in a number of places (e.g. ParserFactory, Parser,
+  Lexer, PrettyPrinter) and gives more precise control over the PHP version being targeted.
+* Added PHP 8 parser though it only differs from the PHP 7 parser in concatenation precedence.
+* Added `Parser::getLexer()` method.
+* Added a `Modifiers` class, as a replacement for `Stmt\Class_::MODIFIER_*`.
+* Added support for returning an array or `REMOVE_NODE` from `NodeVisitor::enterNode()`.
+
+### Removed
+
+* The PHP 5 parser has been removed. The PHP 7 parser has been adjusted to deal with PHP 5 code
+  more gracefully.
+
+Version 4.15.1 (2022-09-04)
+---------------------------
+
+### Fixed
+
+* Fixed formatting preservation when adding *multiple* attributes to a class/method/etc that
+  previously had none. This fixes a regression in the 4.15.0 release.
+
+Version 4.15.0 (2022-09-03)
+---------------------------
+
+### Added
+
+* PHP 8.2: Added support for `true` type.
+* PHP 8.2: Added support for DNF types.
+
+### Fixed
+
+* Support `readonly` as a function name.
+* Added `__serialize` and `__unserialize` to magic method list.
+* Fixed bounds check in `Name::slice()`.
+* Fixed formatting preservation when adding attributes to a class/method/etc that previously had none.
+
+Version 4.14.0 (2022-05-31)
+---------------------------
+
+### Added
+
+* Added support for readonly classes.
+* Added `rawValue` attribute to `LNumber`, `DNumber` and `String_` nodes, which stores the unparsed
+  value of the literal (e.g. `"1_000"` rather than `1000`).
+
+Version 4.13.2 (2021-11-30)
+---------------------------
+
+### Added
+
+* Added builders for enums and enum cases.
+
+### Fixed
+
+* NullsafeMethodCall now extends from CallLike.
+* The `namespacedName` property populated by the `NameResolver` is now declared on relevant nodes,
+  to avoid a dynamic property deprecation warning with PHP 8.2.
+
+Version 4.13.1 (2021-11-03)
+---------------------------
+
+### Fixed
+
+* Support reserved keywords as enum cases.
+* Support array unpacking in constant expression evaluator.
+
+Version 4.13.0 (2021-09-20)
+---------------------------
+
+### Added
+
+* [PHP 8.1] Added support for intersection types using a new `IntersectionType` node. Additionally
+  a `ComplexType` parent class for `NullableType`, `UnionType` and `IntersectionType` has been
+  added.
+* [PHP 8.1] Added support for explicit octal literals.
+* [PHP 8.1] Added support for first-class callables. These are represented using a call whose first
+  argument is a `VariadicPlaceholder`. The representation is intended to be forward-compatible with
+  partial function application, just like the PHP feature itself. Call nodes now extend from
+  `Expr\CallLike`, which provides an `isFirstClassCallable()` method to determine whether a
+  placeholder id present. `getArgs()` can be used to assert that the call is not a first-class
+  callable and returns `Arg[]` rather than `array<Arg|VariadicPlaceholder>`.
+
+### Fixed
+
+* Multiple modifiers for promoted properties are now accepted. In particular this allows something
+  like `public readonly` for promoted properties.
+* Formatting-preserving pretty printing for comments in array literals has been fixed.
+
+Version 4.12.0 (2021-07-21)
+---------------------------
+
+### Added
+
+* [PHP 8.1] Added support for readonly properties (through a new `MODIFIER_READONLY`).
+* [PHP 8.1] Added support for final class constants.
+
+### Fixed
+
+* Fixed compatibility with PHP 8.1. `&` tokens are now canonicalized to the
+  `T_AMPERSAND_FOLLOWED_BY_VAR_OR_VARARG` and `T_AMPERSAND_NOT_FOLLOWED_BY_VAR_OR_VARARG` tokens
+  used in PHP 8.1. This happens unconditionally, regardless of whether the emulative lexer is used.
+
+Version 4.11.0 (2021-07-03)
+---------------------------
+
+### Added
+
+* `BuilderFactory::args()` now accepts named arguments.
+* `BuilderFactory::attribute()` has been added.
+* An `addAttribute()` method accepting an `Attribute` or `AttributeGroup` has been adde to all
+  builders that accept attributes, such as `Builder\Class_`.
+
+### Fixed
+
+* `NameResolver` now handles enums.
+* `PrettyPrinter` now prints backing enum type.
+* Builder methods for types now property handle `never` type.
+
+Version 4.10.5 (2021-05-03)
+---------------------------
+
+### Added
+
+* [PHP 8.1] Added support for enums. These are represented using the `Stmt\Enum_` and
+  `Stmt\EnumCase` nodes.
+* [PHP 8.1] Added support for never type. This type will now be returned as an `Identifier` rather
+  than `Name`.
+* Added `ClassConst` builder.
+
+### Changed
+
+* Non-UTF-8 code units in strings will now be hex-encoded.
+
+### Fixed
+
+* Fixed precedence of arrow functions.
+
+Version 4.10.4 (2020-12-20)
+---------------------------
+
+### Fixed
+
+* Fixed position information for variable-variables (#741).
+* Fixed position information for traits/interfaces preceded by if statement (#738).
+
+Version 4.10.3 (2020-12-03)
+---------------------------
+
+### Fixed
+
+* Fixed formatting-preserving pretty printing for `"{$x}"`.
+* Ternary expressions are now treated as non-associative in the pretty printer, in order to
+  generate code that is compatible with the parentheses requirement introduced in PHP 8.
+* Removed no longer necessary `error_clear_last()` call in lexer, which may interfere with fatal
+  error handlers if invoked during shutdown.
+
+
+Version 4.10.2 (2020-09-26)
+------------------
+
+### Fixed
+
+* Fixed check for token emulation conflicts with other libraries.
+
+Version 4.10.1 (2020-09-23)
+---------------------------
+
+### Added
+
+* Added support for recovering from a missing semicolon after a property or class constant
+  declaration.
+
+### Fixed
+
+* Fix spurious whitespace in formatting-preserving pretty printer when both removing and adding
+  elements at the start of a list.
+* Fix incorrect case-sensitivity in keyword token emulation.
+
+Version 4.10.0 (2020-09-19)
+---------------------------
+
+### Added
+
+* [PHP 8.0] Added support for attributes. These are represented using a new `AttributeGroup` node
+  containing `Attribute` nodes. A new `attrGroups` subnode is available on all node types that
+  support attributes, i.e. `Stmt\Class_`, `Stmt\Trait_`, `Stmt\Interface_`, `Stmt\Function_`,
+  `Stmt\ClassMethod`, `Stmt\ClassConst`, `Stmt\Property`, `Expr\Closure`, `Expr\ArrowFunction` and
+  `Param`.
+* [PHP 8.0] Added support for nullsafe properties inside interpolated strings, in line with an
+  upstream change.
+
+### Fixed
+
+* Improved compatibility with other libraries that use forward compatibility defines for PHP tokens.
+
+Version 4.9.1 (2020-08-30)
+--------------------------
+
+### Added
+
+* Added support for removing the first element of a list to the formatting-preserving pretty
+  printer.
+
+### Fixed
+
+* Allow member modifiers as part of namespaced names. These were missed when support for other
+  keywords was added.
+
+Version 4.9.0 (2020-08-18)
+--------------------------
+
+### Added
+
+* [PHP 8.0] Added support for named arguments, represented using a new `name` subnode on `Arg`.
+* [PHP 8.0] Added support for static return type, represented like a normal class return type.
+* [PHP 8.0] Added support for throw expression, represented using a new `Expr\Throw_` node. For
+  backwards compatibility reasons, throw expressions in statement context continue to be
+  represented using `Stmt\Throw_`.
+* [PHP 8.0] Added support for keywords as parts of namespaced names.
+
+### Fixed
+
+* Emit parentheses for class constant fetch with complex left-hand-side.
+* Emit parentheses for new/instanceof on complex class expression.
+
+Version 4.8.0 (2020-08-09)
+--------------------------
+
+### Added
+
+* [PHP 8.0] Added support for nullsafe operator, represented using the new
+  `Expr\NullsafePropertyFetch` and `Expr\NullsafeMethodCall` nodes.
+* Added `phpVersion` option to the emulative lexer, which allows controlling the target version to
+  emulate (defaults to the latest available, currently PHP 8.0). This is useful to parse code that
+  uses reserved keywords from newer PHP versions as identifiers.
+
+Version 4.7.0 (2020-07-25)
+--------------------------
+
+### Added
+
+* Add `ParentConnectingVisitor` and `NodeConnectingVisitor` classes.
+* [PHP 8.0] Added support for match expressions. These are represented using a new `Expr\Match_`
+  containing `MatchArm`s.
+* [PHP 8.0] Added support for trailing comma in closure use lists.
+
+### Fixed
+
+* Fixed missing error for unterminated comment with trailing newline (#688).
+* Compatibility with PHP 8.0 has been restored: Namespaced names are now always represented by
+  `T_NAME_*` tokens, using emulationg on older PHP versions. Full support for reserved keywords
+  in namespaced names is not yet present.
+
+Version 4.6.0 (2020-07-02)
+--------------------------
+
+### Added
+
+* [PHP 8.0] Added support for trailing commas in parameter lists.
+* [PHP 8.0] Added support for constructor promotion. The parameter visibility is stored in
+  `Node\Param::$flags`.
+
+### Fixed
+
+* Comment tokens now always follow the PHP 8 interpretation, and do not include trailing
+  whitespace.
+* As a result of the previous change, some whitespace issues when inserting a statement into a
+  method containing only a comment, and using the formatting-preserving pretty printer, have been
+  resolved.
+
+Version 4.5.0 (2020-06-03)
+--------------------------
+
+### Added
+
+* [PHP 8.0] Added support for the mixed type. This means `mixed` types are now parsed as an
+  `Identifier` rather than a `Name`.
+* [PHP 8.0] Added support for catching without capturing the exception. This means that
+  `Catch_::$var` may now be null.
+
+Version 4.4.0 (2020-04-10)
+--------------------------
+
+### Added
+
+* Added support for passing union types in builders.
+* Added end line, token position and file position information for comments.
+* Added `getProperty()` method to `ClassLike` nodes.
+
+### Fixed
+
+* Fixed generation of invalid code when using the formatting preserving pretty printer, and
+  inserting code next to certain nop statements. The formatting is still ugly though.
+* `getDocComment()` no longer requires that the very last comment before a node be a doc comment.
+  There may not be non-doc comments between the doc comment and the declaration.
+* Allowed arbitrary expressions in `isset()` and `list()`, rather than just variables.
+  In particular, this allows `isset(($x))`, which is legal PHP code.
+* [PHP 8.0] Add support for [variable syntax tweaks RFC](https://wiki.php.net/rfc/variable_syntax_tweaks).
+
+Version 4.3.0 (2019-11-08)
+--------------------------
+
+### Added
+
+* [PHP 8.0] Added support for union types using a new `UnionType` node.
+
+Version 4.2.5 (2019-10-25)
+--------------------------
+
+### Changed
+
+* Tests and documentation are no longer included in source archives. They can still be accessed
+  by cloning the repository.
+* php-yacc is now used to generate the parser. This has no impact on users of the library.
 
 Version 4.2.4 (2019-09-01)
 --------------------------

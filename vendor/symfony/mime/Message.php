@@ -18,15 +18,13 @@ use Symfony\Component\Mime\Part\TextPart;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
- *
- * @experimental in 4.3
  */
 class Message extends RawMessage
 {
-    private $headers;
-    private $body;
+    private Headers $headers;
+    private ?AbstractPart $body;
 
-    public function __construct(Headers $headers = null, AbstractPart $body = null)
+    public function __construct(?Headers $headers = null, ?AbstractPart $body = null)
     {
         $this->headers = $headers ? clone $headers : new Headers();
         $this->body = $body;
@@ -34,9 +32,7 @@ class Message extends RawMessage
 
     public function __clone()
     {
-        if (null !== $this->headers) {
-            $this->headers = clone $this->headers;
-        }
+        $this->headers = clone $this->headers;
 
         if (null !== $this->body) {
             $this->body = clone $this->body;
@@ -46,8 +42,11 @@ class Message extends RawMessage
     /**
      * @return $this
      */
-    public function setBody(AbstractPart $body = null)
+    public function setBody(?AbstractPart $body = null): static
     {
+        if (1 > \func_num_args()) {
+            trigger_deprecation('symfony/mime', '6.2', 'Calling "%s()" without any arguments is deprecated, pass null explicitly instead.', __METHOD__);
+        }
         $this->body = $body;
 
         return $this;
@@ -61,7 +60,7 @@ class Message extends RawMessage
     /**
      * @return $this
      */
-    public function setHeaders(Headers $headers)
+    public function setHeaders(Headers $headers): static
     {
         $this->headers = $headers;
 
@@ -78,26 +77,27 @@ class Message extends RawMessage
         $headers = clone $this->headers;
 
         if (!$headers->has('From')) {
-            throw new LogicException('An email must have a "From" header.');
+            if (!$headers->has('Sender')) {
+                throw new LogicException('An email must have a "From" or a "Sender" header.');
+            }
+            $headers->addMailboxListHeader('From', [$headers->get('Sender')->getAddress()]);
         }
 
-        $headers->addTextHeader('MIME-Version', '1.0');
+        if (!$headers->has('MIME-Version')) {
+            $headers->addTextHeader('MIME-Version', '1.0');
+        }
 
         if (!$headers->has('Date')) {
             $headers->addDateHeader('Date', new \DateTimeImmutable());
         }
 
         // determine the "real" sender
-        $senders = $headers->get('From')->getAddresses();
-        $sender = $senders[0];
-        if ($headers->has('Sender')) {
-            $sender = $headers->get('Sender')->getAddress();
-        } elseif (\count($senders) > 1) {
-            $headers->addMailboxHeader('Sender', $sender);
+        if (!$headers->has('Sender') && \count($froms = $headers->get('From')->getAddresses()) > 1) {
+            $headers->addMailboxHeader('Sender', $froms[0]);
         }
 
         if (!$headers->has('Message-ID')) {
-            $headers->addIdHeader('Message-ID', $this->generateMessageId($sender->getAddress()));
+            $headers->addIdHeader('Message-ID', $this->generateMessageId());
         }
 
         // remove the Bcc field which should NOT be part of the sent message
@@ -125,9 +125,36 @@ class Message extends RawMessage
         yield from $body->toIterable();
     }
 
-    private function generateMessageId(string $email): string
+    /**
+     * @return void
+     */
+    public function ensureValidity()
     {
-        return bin2hex(random_bytes(16)).strstr($email, '@');
+        if (!$this->headers->get('To')?->getBody() && !$this->headers->get('Cc')?->getBody() && !$this->headers->get('Bcc')?->getBody()) {
+            throw new LogicException('An email must have a "To", "Cc", or "Bcc" header.');
+        }
+
+        if (!$this->headers->get('From')?->getBody() && !$this->headers->get('Sender')?->getBody()) {
+            throw new LogicException('An email must have a "From" or a "Sender" header.');
+        }
+
+        parent::ensureValidity();
+    }
+
+    public function generateMessageId(): string
+    {
+        if ($this->headers->has('Sender')) {
+            $sender = $this->headers->get('Sender')->getAddress();
+        } elseif ($this->headers->has('From')) {
+            if (!$froms = $this->headers->get('From')->getAddresses()) {
+                throw new LogicException('A "From" header must have at least one email address.');
+            }
+            $sender = $froms[0];
+        } else {
+            throw new LogicException('An email must have a "From" or a "Sender" header.');
+        }
+
+        return bin2hex(random_bytes(16)).strstr($sender->getAddress(), '@');
     }
 
     public function __serialize(): array

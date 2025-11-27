@@ -9,17 +9,15 @@ new Foo($a, $b, );
 unset($a, $b, );
 isset($a, $b, );
 -----
-!!php7
 array(
     0: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: foo
-                )
+                name: foo
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -27,6 +25,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )
@@ -46,6 +45,7 @@ array(
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -53,6 +53,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )
@@ -65,15 +66,14 @@ array(
     2: Stmt_Expression(
         expr: Expr_StaticCall(
             class: Name(
-                parts: array(
-                    0: Foo
-                )
+                name: Foo
             )
             name: Identifier(
                 name: bar
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -81,6 +81,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )
@@ -93,12 +94,11 @@ array(
     3: Stmt_Expression(
         expr: Expr_New(
             class: Name(
-                parts: array(
-                    0: Foo
-                )
+                name: Foo
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -106,6 +106,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )

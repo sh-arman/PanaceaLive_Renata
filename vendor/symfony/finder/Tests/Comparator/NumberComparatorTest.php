@@ -30,7 +30,7 @@ class NumberComparatorTest extends TestCase
                 new NumberComparator($f);
                 $this->fail('__construct() throws an \InvalidArgumentException if the test expression is not valid.');
             } catch (\Exception $e) {
-                $this->assertInstanceOf('InvalidArgumentException', $e, '__construct() throws an \InvalidArgumentException if the test expression is not valid.');
+                $this->assertInstanceOf(\InvalidArgumentException::class, $e, '__construct() throws an \InvalidArgumentException if the test expression is not valid.');
             }
         }
     }
@@ -51,7 +51,7 @@ class NumberComparatorTest extends TestCase
         }
     }
 
-    public function getTestData()
+    public static function getTestData()
     {
         return [
             ['< 1000', ['500', '999'], ['1000', '1500']],
@@ -81,7 +81,7 @@ class NumberComparatorTest extends TestCase
         ];
     }
 
-    public function getConstructorTestData()
+    public static function getConstructorTestData()
     {
         return [
             [

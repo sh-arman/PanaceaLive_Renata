@@ -11,10 +11,10 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    3.0.3
+ * @version    7.0.0
  * @author     Cartalyst LLC
  * @license    BSD License (3-clause)
- * @copyright  (c) 2011-2019, Cartalyst LLC
+ * @copyright  (c) 2011-2023, Cartalyst LLC
  * @link       https://cartalyst.com
  */
 
@@ -56,9 +56,9 @@ class EloquentUser extends Model implements PermissibleInterface, PersistableInt
     protected $fillable = [
         'email',
         'password',
-        'name',
-	'phone_number',
-        'permissions'
+        'last_name',
+        'first_name',
+        'permissions',
     ];
 
     /**
@@ -92,7 +92,7 @@ class EloquentUser extends Model implements PermissibleInterface, PersistableInt
      *
      * @var array
      */
-    protected $loginNames = ['email','phone_number'];
+    protected $loginNames = ['email'];
 
     /**
      * The Roles model FQCN.

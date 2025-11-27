@@ -18,8 +18,9 @@ use Symfony\Component\Console\Input\InputOption;
 
 class InputDefinitionTest extends TestCase
 {
-    protected static $fixtures;
+    protected static string $fixtures;
 
+    protected $multi;
     protected $foo;
     protected $bar;
     protected $foo1;
@@ -88,7 +89,7 @@ class InputDefinitionTest extends TestCase
 
     public function testArgumentsMustHaveDifferentNames()
     {
-        $this->expectException('LogicException');
+        $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('An argument with name "foo" already exists.');
         $this->initializeArguments();
 
@@ -99,8 +100,8 @@ class InputDefinitionTest extends TestCase
 
     public function testArrayArgumentHasToBeLast()
     {
-        $this->expectException('LogicException');
-        $this->expectExceptionMessage('Cannot add an argument after an array argument.');
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('Cannot add a required argument "anotherbar" after an array argument "fooarray".');
         $this->initializeArguments();
 
         $definition = new InputDefinition();
@@ -110,9 +111,9 @@ class InputDefinitionTest extends TestCase
 
     public function testRequiredArgumentCannotFollowAnOptionalOne()
     {
-        $this->expectException('LogicException');
-        $this->expectExceptionMessage('Cannot add a required argument after an optional one.');
         $this->initializeArguments();
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage(\sprintf('Cannot add a required argument "%s" after an optional one "%s".', $this->foo2->getName(), $this->foo->getName()));
 
         $definition = new InputDefinition();
         $definition->addArgument($this->foo);
@@ -130,7 +131,7 @@ class InputDefinitionTest extends TestCase
 
     public function testGetInvalidArgument()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "bar" argument does not exist.');
         $this->initializeArguments();
 
@@ -178,7 +179,7 @@ class InputDefinitionTest extends TestCase
             new InputArgument('foo1', InputArgument::OPTIONAL),
             new InputArgument('foo2', InputArgument::OPTIONAL, '', 'default'),
             new InputArgument('foo3', InputArgument::OPTIONAL | InputArgument::IS_ARRAY),
-        //  new InputArgument('foo4', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, '', [1, 2]),
+            // new InputArgument('foo4', InputArgument::OPTIONAL | InputArgument::IS_ARRAY, '', [1, 2]),
         ]);
         $this->assertEquals(['foo1' => null, 'foo2' => 'default', 'foo3' => []], $definition->getArgumentDefaults(), '->getArgumentDefaults() return the default values for each argument');
 
@@ -200,7 +201,7 @@ class InputDefinitionTest extends TestCase
 
     public function testSetOptionsClearsOptions()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "-f" option does not exist.');
         $this->initializeOptions();
 
@@ -232,7 +233,7 @@ class InputDefinitionTest extends TestCase
 
     public function testAddDuplicateOption()
     {
-        $this->expectException('LogicException');
+        $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('An option named "foo" already exists.');
         $this->initializeOptions();
 
@@ -241,9 +242,29 @@ class InputDefinitionTest extends TestCase
         $definition->addOption($this->foo2);
     }
 
+    public function testAddDuplicateNegatedOption()
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('An option named "no-foo" already exists.');
+
+        $definition = new InputDefinition();
+        $definition->addOption(new InputOption('no-foo'));
+        $definition->addOption(new InputOption('foo', null, InputOption::VALUE_NEGATABLE));
+    }
+
+    public function testAddDuplicateNegatedReverseOption()
+    {
+        $this->expectException(\LogicException::class);
+        $this->expectExceptionMessage('An option named "no-foo" already exists.');
+
+        $definition = new InputDefinition();
+        $definition->addOption(new InputOption('foo', null, InputOption::VALUE_NEGATABLE));
+        $definition->addOption(new InputOption('no-foo'));
+    }
+
     public function testAddDuplicateShortcutOption()
     {
-        $this->expectException('LogicException');
+        $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('An option with shortcut "f" already exists.');
         $this->initializeOptions();
 
@@ -262,7 +283,7 @@ class InputDefinitionTest extends TestCase
 
     public function testGetInvalidOption()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "--bar" option does not exist.');
         $this->initializeOptions();
 
@@ -307,7 +328,7 @@ class InputDefinitionTest extends TestCase
 
     public function testGetOptionForInvalidShortcut()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The "-l" option does not exist.');
         $this->initializeOptions();
 
@@ -346,7 +367,7 @@ class InputDefinitionTest extends TestCase
         $this->assertEquals($expectedSynopsis, $definition->getSynopsis(), $message ? '->getSynopsis() '.$message : '');
     }
 
-    public function getGetSynopsisData()
+    public static function getGetSynopsisData()
     {
         return [
             [new InputDefinition([new InputOption('foo')]), '[--foo]', 'puts optional options in square brackets'],

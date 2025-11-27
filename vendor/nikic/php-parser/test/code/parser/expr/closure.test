@@ -12,10 +12,15 @@ function() use($a) : \Foo\Bar {};
 array(
     0: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: false
             params: array(
                 0: Param(
+                    attrGroups: array(
+                    )
+                    flags: 0
                     type: null
                     byRef: false
                     variadic: false
@@ -23,6 +28,8 @@ array(
                         name: a
                     )
                     default: null
+                    hooks: array(
+                    )
                 )
             )
             uses: array(
@@ -39,10 +46,15 @@ array(
     )
     1: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: false
             params: array(
                 0: Param(
+                    attrGroups: array(
+                    )
+                    flags: 0
                     type: null
                     byRef: false
                     variadic: false
@@ -50,10 +62,12 @@ array(
                         name: a
                     )
                     default: null
+                    hooks: array(
+                    )
                 )
             )
             uses: array(
-                0: Expr_ClosureUse(
+                0: ClosureUse(
                     var: Expr_Variable(
                         name: b
                     )
@@ -67,18 +81,20 @@ array(
     )
     2: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: false
             params: array(
             )
             uses: array(
-                0: Expr_ClosureUse(
+                0: ClosureUse(
                     var: Expr_Variable(
                         name: a
                     )
                     byRef: false
                 )
-                1: Expr_ClosureUse(
+                1: ClosureUse(
                     var: Expr_Variable(
                         name: b
                     )
@@ -92,10 +108,15 @@ array(
     )
     3: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: true
             params: array(
                 0: Param(
+                    attrGroups: array(
+                    )
+                    flags: 0
                     type: null
                     byRef: false
                     variadic: false
@@ -103,6 +124,8 @@ array(
                         name: a
                     )
                     default: null
+                    hooks: array(
+                    )
                 )
             )
             uses: array(
@@ -114,6 +137,8 @@ array(
     )
     4: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: true
             byRef: false
             params: array(
@@ -127,10 +152,15 @@ array(
     )
     5: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: false
             params: array(
                 0: Param(
+                    attrGroups: array(
+                    )
+                    flags: 0
                     type: null
                     byRef: false
                     variadic: false
@@ -138,6 +168,8 @@ array(
                         name: a
                     )
                     default: null
+                    hooks: array(
+                    )
                 )
             )
             uses: array(
@@ -151,12 +183,14 @@ array(
     )
     6: Stmt_Expression(
         expr: Expr_Closure(
+            attrGroups: array(
+            )
             static: false
             byRef: false
             params: array(
             )
             uses: array(
-                0: Expr_ClosureUse(
+                0: ClosureUse(
                     var: Expr_Variable(
                         name: a
                     )
@@ -164,10 +198,7 @@ array(
                 )
             )
             returnType: Name_FullyQualified(
-                parts: array(
-                    0: Foo
-                    1: Bar
-                )
+                name: Foo\Bar
             )
             stmts: array(
             )

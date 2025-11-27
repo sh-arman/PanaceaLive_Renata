@@ -36,7 +36,7 @@ class IntlFormatterTest extends \PHPUnit\Framework\TestCase
 
     public function testFormatWithNamedArguments()
     {
-        if (version_compare(INTL_ICU_VERSION, '4.8', '<')) {
+        if (version_compare(\INTL_ICU_VERSION, '4.8', '<')) {
             $this->markTestSkipped('Format with named arguments can only be run with ICU 4.8 or higher and PHP >= 5.5');
         }
 
@@ -69,7 +69,7 @@ _MSG_;
         $this->assertEquals('Fabien invites Guilherme as one of the 9 people invited to his party.', $message);
     }
 
-    public function provideDataForFormat()
+    public static function provideDataForFormat()
     {
         return [
             [
@@ -81,6 +81,11 @@ _MSG_;
                 '4,560 monkeys on 123 trees make 37.073 monkeys per tree',
                 '{0,number,integer} monkeys on {1,number,integer} trees make {2,number} monkeys per tree',
                 [4560, 123, 4560 / 123],
+            ],
+            [
+                '',
+                '',
+                [],
             ],
         ];
     }

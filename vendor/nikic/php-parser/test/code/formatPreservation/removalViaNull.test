@@ -35,6 +35,11 @@ Bar
         y
         ;
     }
+
+    const
+    int
+    X
+    = 1;
 }
 
 $foo [ $bar ];
@@ -43,7 +48,7 @@ $foo
 ? $bar :
 $baz;
 [ $a => $b
-, $c => $d];
+, $c => & $d];
 
 yield
 $foo
@@ -97,6 +102,7 @@ $stmts[2]->extends = null;
 $stmts[2]->stmts[0]->returnType = null;
 $stmts[2]->stmts[1]->props[0]->default = null;
 $stmts[2]->stmts[2]->adaptations[0]->newName = null;
+$stmts[2]->stmts[3]->type = null;
 $stmts[3]->expr->dim = null;
 $stmts[4]->expr->expr = null;
 $stmts[5]->expr->if = null;
@@ -141,6 +147,10 @@ Foo
         public
         ;
     }
+
+    const
+    X
+    = 1;
 }
 
 $foo [];
@@ -149,7 +159,7 @@ $foo
 ?:
 $baz;
 [ $a => $b
-, $d];
+, & $d];
 
 yield
 $bar;
@@ -192,3 +202,21 @@ $stmts[0]->name = null;
 namespace
     {
     }
+-----
+<?php
+try
+{
+}
+catch (Exception $e)
+{
+}
+-----
+$stmts[0]->catches[0]->var = null;
+-----
+<?php
+try
+{
+}
+catch (Exception)
+{
+}

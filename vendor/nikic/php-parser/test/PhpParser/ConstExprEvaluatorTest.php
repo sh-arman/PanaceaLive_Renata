@@ -5,23 +5,25 @@ namespace PhpParser;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Scalar;
 
-class ConstExprEvaluatorTest extends \PHPUnit\Framework\TestCase
-{
+class ConstExprEvaluatorTest extends \PHPUnit\Framework\TestCase {
     /** @dataProvider provideTestEvaluate */
-    public function testEvaluate($exprString, $expected) {
-        $parser = new Parser\Php7(new Lexer());
+    public function testEvaluate($exprString, $expected): void {
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
         $expr = $parser->parse('<?php ' . $exprString . ';')[0]->expr;
         $evaluator = new ConstExprEvaluator();
         $this->assertSame($expected, $evaluator->evaluateDirectly($expr));
     }
 
-    public function provideTestEvaluate() {
+    public static function provideTestEvaluate() {
         return [
             ['1', 1],
             ['1.0', 1.0],
             ['"foo"', "foo"],
             ['[0, 1]', [0, 1]],
             ['["foo" => "bar"]', ["foo" => "bar"]],
+            ['[...["bar"]]', ["bar"]],
+            ['[...["foo" => "bar"]]', ["foo" => "bar"]],
+            ['["a", "b" => "b", ...["b" => "bb", "c"]]', ["a", "b" => "bb", "c"]],
             ['NULL', null],
             ['False', false],
             ['true', true],
@@ -69,25 +71,26 @@ class ConstExprEvaluatorTest extends \PHPUnit\Framework\TestCase
             ['true || (1/0)', true],
             ['true or (1/0)', true],
             ['true xor false', true],
+            ['"foo" |> "strlen"', 3],
         ];
     }
 
-    public function testEvaluateFails() {
+    public function testEvaluateFails(): void {
         $this->expectException(ConstExprEvaluationException::class);
         $this->expectExceptionMessage('Expression of type Expr_Variable cannot be evaluated');
         $evaluator = new ConstExprEvaluator();
         $evaluator->evaluateDirectly(new Expr\Variable('a'));
     }
 
-    public function testEvaluateFallback() {
-        $evaluator = new ConstExprEvaluator(function(Expr $expr) {
+    public function testEvaluateFallback(): void {
+        $evaluator = new ConstExprEvaluator(function (Expr $expr) {
             if ($expr instanceof Scalar\MagicConst\Line) {
                 return 42;
             }
             throw new ConstExprEvaluationException();
         });
         $expr = new Expr\BinaryOp\Plus(
-            new Scalar\LNumber(8),
+            new Scalar\Int_(8),
             new Scalar\MagicConst\Line()
         );
         $this->assertSame(50, $evaluator->evaluateDirectly($expr));
@@ -96,7 +99,7 @@ class ConstExprEvaluatorTest extends \PHPUnit\Framework\TestCase
     /**
      * @dataProvider provideTestEvaluateSilently
      */
-    public function testEvaluateSilently($expr, $exception, $msg) {
+    public function testEvaluateSilently($expr, $exception, $msg): void {
         $evaluator = new ConstExprEvaluator();
 
         try {
@@ -113,17 +116,19 @@ class ConstExprEvaluatorTest extends \PHPUnit\Framework\TestCase
         }
     }
 
-    public function provideTestEvaluateSilently() {
+    public static function provideTestEvaluateSilently() {
         return [
             [
-                new Expr\BinaryOp\Mod(new Scalar\LNumber(42), new Scalar\LNumber(0)),
+                new Expr\BinaryOp\Mod(new Scalar\Int_(42), new Scalar\Int_(0)),
                 \Error::class,
                 'Modulo by zero'
             ],
             [
-                new Expr\BinaryOp\Div(new Scalar\LNumber(42), new Scalar\LNumber(0)),
+                new Expr\BinaryOp\Plus(new Scalar\Int_(42), new Scalar\String_("1foo")),
                 \ErrorException::class,
-                'Division by zero'
+                \PHP_VERSION_ID >= 80000
+                    ? 'A non-numeric value encountered'
+                    : 'A non well formed numeric value encountered'
             ],
         ];
     }

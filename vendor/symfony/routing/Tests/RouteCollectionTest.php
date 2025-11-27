@@ -66,7 +66,7 @@ class RouteCollectionTest extends TestCase
         $collection->addCollection($collection1);
         $collection->add('last', $last = new Route('/last'));
 
-        $this->assertInstanceOf('\ArrayIterator', $collection->getIterator());
+        $this->assertInstanceOf(\ArrayIterator::class, $collection->getIterator());
         $this->assertSame(['bar' => $bar, 'foo' => $foo, 'last' => $last], $collection->getIterator()->getArrayCopy());
     }
 
@@ -219,17 +219,22 @@ class RouteCollectionTest extends TestCase
     public function testRemove()
     {
         $collection = new RouteCollection();
-        $collection->add('foo', $foo = new Route('/foo'));
+        $collection->add('foo', new Route('/foo'));
 
         $collection1 = new RouteCollection();
         $collection1->add('bar', $bar = new Route('/bar'));
         $collection->addCollection($collection1);
         $collection->add('last', $last = new Route('/last'));
+        $collection->addAlias('alias_removed_when_removing_route_foo', 'foo');
+        $collection->addAlias('alias_directly_removed', 'bar');
 
         $collection->remove('foo');
         $this->assertSame(['bar' => $bar, 'last' => $last], $collection->all(), '->remove() can remove a single route');
+        $collection->remove('alias_directly_removed');
+        $this->assertNull($collection->getAlias('alias_directly_removed'));
         $collection->remove(['bar', 'last']);
         $this->assertSame([], $collection->all(), '->remove() accepts an array and can remove multiple routes at once');
+        $this->assertNull($collection->getAlias('alias_removed_when_removing_route_foo'));
     }
 
     public function testSetHost()
@@ -329,5 +334,55 @@ class RouteCollectionTest extends TestCase
         $this->assertEquals('api_foo', $collection->get('api_foo')->getDefault('_canonical_route'));
         $this->assertEquals('api_bar', $collection->get('api_bar')->getDefault('_canonical_route'));
         $this->assertEquals('api_api_foo', $collection->get('api_api_foo')->getDefault('_canonical_route'));
+    }
+
+    public function testAddWithPriority()
+    {
+        $collection = new RouteCollection();
+        $collection->add('foo', $foo = new Route('/foo'), 0);
+        $collection->add('bar', $bar = new Route('/bar'), 1);
+        $collection->add('baz', $baz = new Route('/baz'));
+
+        $expected = [
+            'bar' => $bar,
+            'foo' => $foo,
+            'baz' => $baz,
+        ];
+
+        $this->assertSame($expected, $collection->all());
+
+        $collection2 = new RouteCollection();
+        $collection2->add('foo2', $foo2 = new Route('/foo'), 0);
+        $collection2->add('bar2', $bar2 = new Route('/bar'), 1);
+        $collection2->add('baz2', $baz2 = new Route('/baz'));
+        $collection2->addCollection($collection);
+
+        $expected = [
+            'bar2' => $bar2,
+            'bar' => $bar,
+            'foo2' => $foo2,
+            'baz2' => $baz2,
+            'foo' => $foo,
+            'baz' => $baz,
+        ];
+
+        $this->assertSame($expected, $collection2->all());
+    }
+
+    public function testAddWithPriorityAndPrefix()
+    {
+        $collection3 = new RouteCollection();
+        $collection3->add('foo3', $foo3 = new Route('/foo'), 0);
+        $collection3->add('bar3', $bar3 = new Route('/bar'), 1);
+        $collection3->add('baz3', $baz3 = new Route('/baz'));
+        $collection3->addNamePrefix('prefix_');
+
+        $expected = [
+            'prefix_bar3' => $bar3,
+            'prefix_foo3' => $foo3,
+            'prefix_baz3' => $baz3,
+        ];
+
+        $this->assertSame($expected, $collection3->all());
     }
 }

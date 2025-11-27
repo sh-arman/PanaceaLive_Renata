@@ -12,11 +12,12 @@
 namespace Symfony\Component\HttpKernel\Tests\CacheClearer;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\CacheClearer\CacheClearerInterface;
 use Symfony\Component\HttpKernel\CacheClearer\ChainCacheClearer;
 
 class ChainCacheClearerTest extends TestCase
 {
-    protected static $cacheDir;
+    protected static string $cacheDir;
 
     public static function setUpBeforeClass(): void
     {
@@ -30,17 +31,12 @@ class ChainCacheClearerTest extends TestCase
 
     public function testInjectClearersInConstructor()
     {
-        $clearer = $this->getMockClearer();
+        $clearer = $this->createMock(CacheClearerInterface::class);
         $clearer
             ->expects($this->once())
             ->method('clear');
 
         $chainClearer = new ChainCacheClearer([$clearer]);
         $chainClearer->clear(self::$cacheDir);
-    }
-
-    protected function getMockClearer()
-    {
-        return $this->getMockBuilder('Symfony\Component\HttpKernel\CacheClearer\CacheClearerInterface')->getMock();
     }
 }

@@ -1,11 +1,11 @@
 <!--
     🛑 DON'T REMOVE ME.
-    This issue template apply to all
+    This issue template applies to all
       - bug reports,
       - feature proposals,
       - and documentation requests
 
-    Having all those informations will allow us to know exactly
+    Having all those information will allow us to know exactly
     what you expect and answer you faster and precisely (answer
     that matches your Carbon version, PHP version and usage).
     
@@ -15,17 +15,24 @@
 Hello,
 
 I encountered an issue with the following code:
+<!--
+    ⚠️ Your code below (not the code from inside Carbon library)
+    Be sure it's dependency-free and enough to reproduce the issue
+    when we run it on:
+    https://play.phpsandbox.io/embed/nesbot/carbon
+-->
 ```php
 echo Carbon::parse('2018-06-01')->subDay()->month;
 ```
 
 Carbon version: **PUT HERE YOUR CARBON VERSION (exact version, not the range)**
+<!--
+    ⚠️ Run the command `composer show nesbot/carbon` to get "versions"
+-->
 
 PHP version: **PUT HERE YOUR PHP VERSION**
 
 <!--
-    Run the command `composer show nesbot/carbon`
-    to get "versions"
     Use `echo phpversion();`
     to get PHP version.
 
@@ -33,12 +40,12 @@ PHP version: **PUT HERE YOUR PHP VERSION**
     macros, timezone, language. So to be sure the code
     you give is enough to reproduce your bug, try it
     first in:
-    https://try-carbon.herokuapp.com/?theme=xcode&export&embed
+    https://play.phpsandbox.io/embed/nesbot/carbon?input=%3C%3Fphp%0A%0Aecho%20Carbon%3A%3Aparse('2018-06-01')-%3EsubDay()-%3Emonth%3B
 
     You can use the [Options] button to change the version
     then when you get the bug with this editor, you can use
     the [Export] button, copy the link of the opened tab,
-    then paste it in the issue. Then we can immediatly get
+    then paste it in the issue. Then we can immediately get
     your issue.
 -->
 
@@ -62,7 +69,7 @@ But I actually get:
 ```
 <!--
     If you did not succeed to get the same result in
-    https://try-carbon.herokuapp.com/ then precise the
+    https://play.phpsandbox.io/embed/nesbot/carbon?input=%3C%3Fphp%0A%0Aecho%20Carbon%3A%3Aparse('2018-06-01')%3B then precise the
     result you get.
 -->
 

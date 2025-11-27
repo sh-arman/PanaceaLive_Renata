@@ -11,7 +11,10 @@ return new class() {
             ->condition('abc')
             ->options(['utf8' => true])
             ->add('buz', 'zub')
-            ->controller('foo:act');
+            ->controller('foo:act')
+            ->stateless(true)
+            ->add('controller_class', '/controller')
+            ->controller(['Acme\MyApp\MyController', 'myAction']);
 
         $routes->import('php_dsl_sub.php')
             ->prefix('/sub')

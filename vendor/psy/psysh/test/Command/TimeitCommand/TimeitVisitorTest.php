@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,10 +15,17 @@ use PhpParser\NodeTraverser;
 use Psy\Command\TimeitCommand\TimeitVisitor;
 use Psy\Test\ParserTestCase;
 
+/**
+ * @group isolation-fail
+ */
 class TimeitVisitorTest extends ParserTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
+        // @todo Pass visitor directly to once we drop support for PHP-Parser 4.x
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new TimeitVisitor());
     }

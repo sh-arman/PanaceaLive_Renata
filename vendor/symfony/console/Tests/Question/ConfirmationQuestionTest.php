@@ -26,11 +26,11 @@ class ConfirmationQuestionTest extends TestCase
         foreach ($answers as $answer) {
             $normalizer = $sut->getNormalizer();
             $actual = $normalizer($answer);
-            $this->assertEquals($expected, $actual, sprintf($message, $answer));
+            $this->assertEquals($expected, $actual, \sprintf($message, $answer));
         }
     }
 
-    public function normalizerUsecases()
+    public static function normalizerUsecases()
     {
         return [
             [

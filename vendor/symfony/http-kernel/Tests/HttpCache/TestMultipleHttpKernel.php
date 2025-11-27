@@ -21,11 +21,11 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 class TestMultipleHttpKernel extends HttpKernel implements ControllerResolverInterface, ArgumentResolverInterface
 {
-    protected $bodies = [];
-    protected $statuses = [];
-    protected $headers = [];
-    protected $called = false;
-    protected $backendRequest;
+    protected array $bodies = [];
+    protected array $statuses = [];
+    protected array $headers = [];
+    protected bool $called = false;
+    protected Request $backendRequest;
 
     public function __construct($responses)
     {
@@ -43,19 +43,19 @@ class TestMultipleHttpKernel extends HttpKernel implements ControllerResolverInt
         return $this->backendRequest;
     }
 
-    public function handle(Request $request, $type = HttpKernelInterface::MASTER_REQUEST, $catch = false)
+    public function handle(Request $request, $type = HttpKernelInterface::MAIN_REQUEST, $catch = false): Response
     {
         $this->backendRequest = $request;
 
         return parent::handle($request, $type, $catch);
     }
 
-    public function getController(Request $request)
+    public function getController(Request $request): callable|false
     {
-        return [$this, 'callController'];
+        return $this->callController(...);
     }
 
-    public function getArguments(Request $request, $controller)
+    public function getArguments(Request $request, callable $controller, ?\ReflectionFunctionAbstract $reflector = null): array
     {
         return [$request];
     }

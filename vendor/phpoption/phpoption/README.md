@@ -1,43 +1,56 @@
-PHP Option Type [![Build Status](https://secure.travis-ci.org/schmittjoh/php-option.png)](http://travis-ci.org/schmittjoh/php-option) [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/schmittjoh/php-option/badges/quality-score.png?s=7feb0fcc5150b36216f7683292ed8480aab1628b)](https://scrutinizer-ci.com/g/schmittjoh/php-option/)
-===============
-This adds an Option type for PHP.
+# PHP Option Type
+
+This package implements the Option type for PHP!
+
+![Banner](https://user-images.githubusercontent.com/2829600/71564011-3077bf00-2a91-11ea-9083-905702cc262b.png)
+
+<p align="center">
+<a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-brightgreen.svg?style=flat-square" alt="Software License"></img></a>
+<a href="https://packagist.org/packages/phpoption/phpoption"><img src="https://img.shields.io/packagist/dt/phpoption/phpoption.svg?style=flat-square" alt="Total Downloads"></img></a>
+<a href="https://github.com/schmittjoh/php-option/releases"><img src="https://img.shields.io/github/release/schmittjoh/php-option.svg?style=flat-square" alt="Latest Version"></img></a>
+</p>
+
+
+## Motivation
 
 The Option type is intended for cases where you sometimes might return a value
-(typically an object), and sometimes you might return no value (typically null)
-depending on arguments, or other runtime factors.
+(typically an object), and sometimes you might return a base value (typically
+null) depending on arguments, or other runtime factors.
 
-Often times, you forget to handle the case where no value is returned. Not intentionally
-of course, but maybe you did not account for all possible states of the system; or maybe you
-indeed covered all cases, then time goes on, code is refactored, some of these your checks 
-might become invalid, or incomplete. Suddenly, without noticing, the no value case is not
-handled anymore. As a result, you might sometimes get fatal PHP errors telling you that 
+Often times, you forget to handle the case where a base value should be
+returned. Not intentionally of course, but maybe you did not account for all
+possible states of the system; or maybe you indeed covered all cases, then time
+goes on, code is refactored, some of these your checks might become invalid, or
+incomplete. Suddenly, without noticing, the base value case is not handled
+anymore. As a result, you might sometimes get fatal PHP errors telling you that
 you called a method on a non-object; users might see blank pages, or worse.
 
-On one hand, the Option type forces a developer to consciously think about both cases
-(returning a value, or returning no value). That in itself will already make your code more
-robust. On the other hand, the Option type also allows the API developer to provide
-more concise API methods, and empowers the API user in how he consumes these methods.
+On one hand, the Option type forces a developer to consciously think about both
+cases (returning a value, or returning a base value). That in itself will
+already make your code more robust. On the other hand, the Option type also
+allows the API developer to provide more concise API methods, and empowers the
+API user in how he consumes these methods.
 
-Installation
-============
-Installation is super-easy via composer
 
+## Installation
+
+Installation is super-easy via [Composer](https://getcomposer.org/):
+
+```bash
+$ composer require phpoption/phpoption
 ```
-composer require phpoption/phpoption
-```
 
-or add it to your composer.json file.
+or add it by hand to your `composer.json` file.
 
 
-Usage
-=====
+## Usage
 
-Using the Option Type in your API
----------------------------------
+### Using the Option Type in your API
+
 ```php
 class MyRepository
 {
-    public function findSomeEntity($criteria)
+    public function findSomeEntity($criteria): \PhpOption\Option
     {
         if (null !== $entity = $this->em->find(...)) {
             return new \PhpOption\Some($entity);
@@ -50,12 +63,12 @@ class MyRepository
 ```
 
 If you are consuming an existing library, you can also use a shorter version
-which by default treats ``null`` as ``None``, and everything else as ``Some`` case:
+which by default treats `null` as `None`, and everything else as `Some` case:
 
 ```php
 class MyRepository
 {
-    public function findSomeEntity($criteria)
+    public function findSomeEntity($criteria): \PhpOption\Option
     {
         return \PhpOption\Option::fromValue($this->em->find(...));
 
@@ -65,14 +78,14 @@ class MyRepository
 }
 ```
 
-Case 1: You always Require an Entity in Calling Code
-----------------------------------------------------
+### Case 1: You always Require an Entity in Calling Code
+
 ```php
 $entity = $repo->findSomeEntity(...)->get(); // returns entity, or throws exception
 ```
 
-Case 2: Fallback to Default Value If Not Available
---------------------------------------------------
+### Case 2: Fallback to Default Value If Not Available
+
 ```php
 $entity = $repo->findSomeEntity(...)->getOrElse(new Entity());
 
@@ -82,14 +95,14 @@ $entity = $repo->findSomeEntity(...)->getOrCall(function() {
 });
 ```
 
-More Examples
-=============
+## More Examples
 
-No More Boiler Plate Code
--------------------------
+### No More Boiler Plate Code
+
 ```php
 // Before
-if (null === $entity = $this->findSomeEntity()) {
+$entity = $this->findSomeEntity();
+if (null === $entity) {
     throw new NotFoundException();
 }
 echo $entity->name;
@@ -98,8 +111,8 @@ echo $entity->name;
 echo $this->findSomeEntity()->get()->name;
 ```
 
-No More Control Flow Exceptions
--------------------------------
+### No More Control Flow Exceptions
+
 ```php
 // Before
 try {
@@ -112,8 +125,8 @@ try {
 $entity = $this->findSomeEntity()->getOrElse(new Entity());
 ```
 
-More Concise Null Handling
---------------------------
+### More Concise Null Handling
+
 ```php
 // Before
 $entity = $this->findSomeEntity();
@@ -127,52 +140,55 @@ return $entity;
 return $this->findSomeEntity()->getOrElse(new Entity());
 ```
 
-Trying Multiple Alternative Options
------------------------------------
-If you'd like to try multiple alternatives, the ``orElse`` method allows you to
+### Trying Multiple Alternative Options
+
+If you'd like to try multiple alternatives, the `orElse` method allows you to
 do this very elegantly:
 
 ```php
 return $this->findSomeEntity()
-            ->orElse($this->findSomeOtherEntity())
-            ->orElse($this->createEntity());
+    ->orElse($this->findSomeOtherEntity())
+    ->orElse($this->createEntity());
 ```
 The first option which is non-empty will be returned. This is especially useful 
 with lazy-evaluated options, see below.
 
-Lazy-Evaluated Options
-----------------------
+### Lazy-Evaluated Options
+
 The above example has the flaw that we would need to evaluate all options when
 the method is called which creates unnecessary overhead if the first option is 
 already non-empty.
 
-Fortunately, we can easily solve this by using the ``LazyOption`` class:
+Fortunately, we can easily solve this by using the `LazyOption` class:
 
 ```php
 return $this->findSomeEntity()
-            ->orElse(new LazyOption(array($this, 'findSomeOtherEntity')))
-            ->orElse(new LazyOption(array($this, 'createEntity')));
+    ->orElse(new LazyOption(array($this, 'findSomeOtherEntity')))
+    ->orElse(new LazyOption(array($this, 'createEntity')));
 ```
 
 This way, only the options that are necessary will actually be evaluated.
 
+## Performance Considerations
 
-Performance Considerations
-==========================
 Of course, performance is important. Attached is a performance benchmark which
-you can run on a machine of your choosing.
+you can run on a machine of your choosing. The overhead incurred by the Option
+type comes down to the time that it takes to create one object, our wrapper,
+and one additional method call to retrieve the value from the wrapper. Unless
+you plan to call a method thousands of times during a request, there is no
+reason to stick to the `object|null` return value; better give your code some
+options!
 
-The overhead incurred by the Option type comes down to the time that it takes to
-create one object, our wrapper. Also, we need to perform one additional method call
-to retrieve the value from the wrapper.
+## Security
 
-* Overhead: Creation of 1 Object, and 1 Method Call
-* Average Overhead per Invocation (some case/value returned): 0.000000761s (that is 761 nano seconds)
-* Average Overhead per Invocation (none case/null returned): 0.000000368s (that is 368 nano seconds)
+If you discover a security vulnerability within this package, please send an email to security@tidelift.com. All security vulnerabilities will be promptly addressed. You may view our full security policy [here](https://github.com/schmittjoh/php-option/security/policy).
 
-The benchmark was run under Ubuntu precise with PHP 5.4.6. As you can see the
-overhead is surprisingly low, almost negligible.
+## License
 
-So in conclusion, unless you plan to call a method thousands of times during a
-request, there is no reason to stick to the ``object|null`` return value; better give
-your code some options!
+PHP Option Type is licensed under [Apache License 2.0](LICENSE).
+
+## For Enterprise
+
+Available as part of the Tidelift Subscription
+
+The maintainers of `phpoption/phpoption` and thousands of other packages are working with Tidelift to deliver commercial support and maintenance for the open source dependencies you use to build your applications. Save time, reduce risk, and improve code health, while paying the maintainers of the exact dependencies you use. [Learn more.](https://tidelift.com/subscription/pkg/packagist-phpoption-phpoption?utm_source=packagist-phpoption-phpoption&utm_medium=referral&utm_campaign=enterprise&utm_term=repo)

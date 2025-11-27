@@ -11,15 +11,13 @@
 
 namespace Symfony\Component\Routing\Tests\Fixtures;
 
+use Symfony\Component\Routing\CompiledRoute;
 use Symfony\Component\Routing\Route;
 use Symfony\Component\Routing\RouteCompiler;
 
 class CustomRouteCompiler extends RouteCompiler
 {
-    /**
-     * {@inheritdoc}
-     */
-    public static function compile(Route $route)
+    public static function compile(Route $route): CompiledRoute
     {
         return new CustomCompiledRoute('', '', [], []);
     }

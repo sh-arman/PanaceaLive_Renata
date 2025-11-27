@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,9 +13,15 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\ImplicitReturnPass;
 
+/**
+ * @group isolation-fail
+ */
 class ImplicitReturnPassTest extends CodeCleanerTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new ImplicitReturnPass());
     }
@@ -38,14 +44,14 @@ class ImplicitReturnPassTest extends CodeCleanerTestCase
         ];
 
         $from = 'echo "foo";';
-        $to   = <<<'EOS'
+        $to = <<<'EOS'
 echo "foo";
 return new \Psy\CodeCleaner\NoReturnValue();
 EOS;
         $data[] = [$from, $to];
 
         $from = 'if (true) { 1; } elseif (true) { 2; } else { 3; }';
-        $to   = <<<'EOS'
+        $to = <<<'EOS'
 if (true) {
     return 1;
 } elseif (true) {
@@ -58,7 +64,7 @@ EOS;
         $data[] = [$from, $to];
 
         $from = 'class A {}';
-        $to   = <<<'EOS'
+        $to = <<<'EOS'
 class A
 {
 }

@@ -7,9 +7,14 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Redis\Events\CommandExecuted;
 use Illuminate\Redis\Limiters\ConcurrencyLimiterBuilder;
 use Illuminate\Redis\Limiters\DurationLimiterBuilder;
+use Illuminate\Support\Traits\Macroable;
 
 abstract class Connection
 {
+    use Macroable {
+        __call as macroCall;
+    }
+
     /**
      * The Redis client.
      *
@@ -113,10 +118,23 @@ abstract class Connection
         $time = round((microtime(true) - $start) * 1000, 2);
 
         if (isset($this->events)) {
-            $this->event(new CommandExecuted($method, $parameters, $time, $this));
+            $this->event(new CommandExecuted(
+                $method, $this->parseParametersForEvent($parameters), $time, $this
+            ));
         }
 
         return $result;
+    }
+
+    /**
+     * Parse the command's parameters for event dispatching.
+     *
+     * @param  array  $parameters
+     * @return array
+     */
+    protected function parseParametersForEvent(array $parameters)
+    {
+        return $parameters;
     }
 
     /**
@@ -127,9 +145,7 @@ abstract class Connection
      */
     protected function event($event)
     {
-        if (isset($this->events)) {
-            $this->events->dispatch($event);
-        }
+        $this->events?->dispatch($event);
     }
 
     /**
@@ -140,9 +156,7 @@ abstract class Connection
      */
     public function listen(Closure $callback)
     {
-        if (isset($this->events)) {
-            $this->events->listen(CommandExecuted::class, $callback);
-        }
+        $this->events?->listen(CommandExecuted::class, $callback);
     }
 
     /**
@@ -208,6 +222,10 @@ abstract class Connection
      */
     public function __call($method, $parameters)
     {
+        if (static::hasMacro($method)) {
+            return $this->macroCall($method, $parameters);
+        }
+
         return $this->command($method, $parameters);
     }
 }

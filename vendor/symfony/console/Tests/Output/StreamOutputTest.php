@@ -17,6 +17,7 @@ use Symfony\Component\Console\Output\StreamOutput;
 
 class StreamOutputTest extends TestCase
 {
+    /** @var resource */
     protected $stream;
 
     protected function setUp(): void
@@ -26,7 +27,7 @@ class StreamOutputTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->stream = null;
+        unset($this->stream);
     }
 
     public function testConstructor()
@@ -38,7 +39,7 @@ class StreamOutputTest extends TestCase
 
     public function testStreamIsRequired()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('The StreamOutput class needs a stream as its first argument.');
         new StreamOutput('foo');
     }
@@ -54,6 +55,14 @@ class StreamOutputTest extends TestCase
         $output = new StreamOutput($this->stream);
         $output->writeln('foo');
         rewind($output->getStream());
-        $this->assertEquals('foo'.PHP_EOL, stream_get_contents($output->getStream()), '->doWrite() writes to the stream');
+        $this->assertEquals('foo'.\PHP_EOL, stream_get_contents($output->getStream()), '->doWrite() writes to the stream');
+    }
+
+    public function testDoWriteOnFailure()
+    {
+        $resource = fopen(__DIR__.'/../Fixtures/stream_output_file.txt', 'r', false);
+        $output = new StreamOutput($resource);
+        rewind($output->getStream());
+        $this->assertEquals('', stream_get_contents($output->getStream()));
     }
 }

@@ -16,8 +16,6 @@ use Symfony\Component\Mime\Header\UnstructuredHeader;
 
 class UnstructuredHeaderTest extends TestCase
 {
-    private $charset = 'utf-8';
-
     public function testGetNameReturnsNameVerbatim()
     {
         $header = new UnstructuredHeader('Subject', '');
@@ -61,7 +59,7 @@ class UnstructuredHeaderTest extends TestCase
         */
         $this->assertEquals(
             'X-Custom-Header: The quick brown fox jumped over the fence, he was a'.
-            ' very'."\r\n".//Folding
+            ' very'."\r\n".// Folding
             ' very scary brown fox with a bushy tail',
             $header->toString(), '%s: The header should have been folded at 76th char'
         );
@@ -78,7 +76,7 @@ class UnstructuredHeaderTest extends TestCase
 
         $nonAsciiChar = pack('C', 0x8F);
         $header = new UnstructuredHeader('X-Test', $nonAsciiChar);
-        $this->assertRegExp('~^[^:\x00-\x20\x80-\xFF]+: [^\x80-\xFF\r\n]+$~s', $header->toString());
+        $this->assertMatchesRegularExpression('~^[^:\x00-\x20\x80-\xFF]+: [^\x80-\xFF\r\n]+$~s', $header->toString());
     }
 
     public function testEncodedWordsFollowGeneralStructure()
@@ -91,7 +89,7 @@ class UnstructuredHeaderTest extends TestCase
 
         $nonAsciiChar = pack('C', 0x8F);
         $header = new UnstructuredHeader('X-Test', $nonAsciiChar);
-        $this->assertRegExp('~^X-Test: \=?.*?\?.*?\?.*?\?=$~s', $header->toString());
+        $this->assertMatchesRegularExpression('~^X-Test: \=?.*?\?.*?\?.*?\?=$~s', $header->toString());
     }
 
     public function testEncodedWordIncludesCharsetAndEncodingMethodAndText()
@@ -116,7 +114,7 @@ class UnstructuredHeaderTest extends TestCase
         $nonPrintableBytes = array_merge(range(0x00, 0x08), range(0x10, 0x19), [0x7F]);
         foreach ($nonPrintableBytes as $byte) {
             $char = pack('C', $byte);
-            $encodedChar = sprintf('=%02X', $byte);
+            $encodedChar = \sprintf('=%02X', $byte);
             $header = new UnstructuredHeader('X-A', $char);
             $header->setCharset('iso-8859-1');
             $this->assertEquals('X-A: =?'.$header->getCharset().'?Q?'.$encodedChar.'?=', $header->toString(), 'Non-printable ascii should be encoded');
@@ -127,7 +125,7 @@ class UnstructuredHeaderTest extends TestCase
     {
         foreach (range(0x80, 0xFF) as $byte) {
             $char = pack('C', $byte);
-            $encodedChar = sprintf('=%02X', $byte);
+            $encodedChar = \sprintf('=%02X', $byte);
             $header = new UnstructuredHeader('X-A', $char);
             $header->setCharset('iso-8859-1');
             $this->assertEquals('X-A: =?'.$header->getCharset().'?Q?'.$encodedChar.'?=', $header->toString(), '8-bit octets should be encoded');
@@ -149,10 +147,10 @@ class UnstructuredHeaderTest extends TestCase
 
         $nonAsciiChar = pack('C', 0x8F);
 
-        //Note that multi-line headers begin with LWSP which makes 75 + 1 = 76
-        //Note also that =?utf-8?q??= is 12 chars which makes 75 - 12 = 63
+        // Note that multi-line headers begin with LWSP which makes 75 + 1 = 76
+        // Note also that =?utf-8?q??= is 12 chars which makes 75 - 12 = 63
 
-        //* X-Test: is 8 chars
+        // * X-Test: is 8 chars
         $header = new UnstructuredHeader('X-Test', $nonAsciiChar);
         $header->setCharset('iso-8859-1');
         $this->assertEquals('X-Test: =?'.$header->getCharset().'?Q?=8F?=', $header->toString());
@@ -169,7 +167,7 @@ class UnstructuredHeaderTest extends TestCase
         // Note that multi-line headers begin with LWSP which makes 75 + 1 = 76
         // Note also that =?utf-8?q??= is 12 chars which makes 75 - 12 = 63
 
-        //* X-Test: is 8 chars
+        // * X-Test: is 8 chars
         $header = new UnstructuredHeader('X-Test', pack('C', 0x8F).'line_one_here'."\r\n".'line_two_here');
         $header->setCharset('iso-8859-1');
         $this->assertEquals('X-Test: =?'.$header->getCharset().'?Q?=8Fline=5Fone=5Fhere?='."\r\n".' =?'.$header->getCharset().'?Q?line=5Ftwo=5Fhere?=', $header->toString());

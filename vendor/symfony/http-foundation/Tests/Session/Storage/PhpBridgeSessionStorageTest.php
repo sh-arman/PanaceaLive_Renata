@@ -23,16 +23,21 @@ use Symfony\Component\HttpFoundation\Session\Storage\PhpBridgeSessionStorage;
  * These tests require separate processes.
  *
  * @runTestsInSeparateProcesses
+ *
  * @preserveGlobalState disabled
  */
 class PhpBridgeSessionStorageTest extends TestCase
 {
-    private $savePath;
+    private string $savePath;
+
+    private $initialSessionSaveHandler;
+    private $initialSessionSavePath;
 
     protected function setUp(): void
     {
-        $this->iniSet('session.save_handler', 'files');
-        $this->iniSet('session.save_path', $this->savePath = sys_get_temp_dir().'/sftest');
+        $this->initialSessionSaveHandler = ini_set('session.save_handler', 'files');
+        $this->initialSessionSavePath = ini_set('session.save_path', $this->savePath = sys_get_temp_dir().'/sftest');
+
         if (!is_dir($this->savePath)) {
             mkdir($this->savePath);
         }
@@ -43,16 +48,14 @@ class PhpBridgeSessionStorageTest extends TestCase
         session_write_close();
         array_map('unlink', glob($this->savePath.'/*'));
         if (is_dir($this->savePath)) {
-            rmdir($this->savePath);
+            @rmdir($this->savePath);
         }
 
-        $this->savePath = null;
+        ini_set('session.save_handler', $this->initialSessionSaveHandler);
+        ini_set('session.save_path', $this->initialSessionSavePath);
     }
 
-    /**
-     * @return PhpBridgeSessionStorage
-     */
-    protected function getStorage()
+    protected function getStorage(): PhpBridgeSessionStorage
     {
         $storage = new PhpBridgeSessionStorage();
         $storage->registerBag(new AttributeBag());
@@ -86,10 +89,10 @@ class PhpBridgeSessionStorageTest extends TestCase
         $_SESSION['drak'] = 'loves symfony';
         $storage->getBag('attributes')->set('symfony', 'greatness');
         $key = $storage->getBag('attributes')->getStorageKey();
-        $this->assertEquals($_SESSION[$key], ['symfony' => 'greatness']);
-        $this->assertEquals($_SESSION['drak'], 'loves symfony');
+        $this->assertEquals(['symfony' => 'greatness'], $_SESSION[$key]);
+        $this->assertEquals('loves symfony', $_SESSION['drak']);
         $storage->clear();
-        $this->assertEquals($_SESSION[$key], []);
-        $this->assertEquals($_SESSION['drak'], 'loves symfony');
+        $this->assertEquals([], $_SESSION[$key]);
+        $this->assertEquals('loves symfony', $_SESSION['drak']);
     }
 }

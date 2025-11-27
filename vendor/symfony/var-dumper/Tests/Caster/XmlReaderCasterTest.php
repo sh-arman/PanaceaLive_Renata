@@ -21,12 +21,11 @@ class XmlReaderCasterTest extends TestCase
 {
     use VarDumperTestTrait;
 
-    /** @var \XmlReader */
-    private $reader;
+    private \XMLReader $reader;
 
     protected function setUp(): void
     {
-        $this->reader = new \XmlReader();
+        $this->reader = new \XMLReader();
         $this->reader->open(__DIR__.'/../Fixtures/xml_reader.xml');
     }
 
@@ -64,7 +63,7 @@ EODUMP;
         $this->assertDumpMatchesFormat($expectedDump, $this->reader);
     }
 
-    public function provideNodes()
+    public static function provideNodes()
     {
         return [
             [0, <<<'EODUMP'
@@ -244,5 +243,19 @@ XMLReader {
 EODUMP
             ],
         ];
+    }
+
+    public function testWithUninitializedXMLReader()
+    {
+        $this->reader = new \XMLReader();
+
+        $expectedDump = <<<'EODUMP'
+XMLReader {
+  +nodeType: NONE
+   …13
+}
+EODUMP;
+
+        $this->assertDumpMatchesFormat($expectedDump, $this->reader);
     }
 }

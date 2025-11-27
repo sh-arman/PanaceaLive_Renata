@@ -12,9 +12,7 @@ array(
     0: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: f
-                )
+                name: f
             )
             args: array(
             )
@@ -23,12 +21,11 @@ array(
     1: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: f
-                )
+                name: f
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -41,12 +38,11 @@ array(
     2: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: f
-                )
+                name: f
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -54,6 +50,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )
@@ -66,12 +63,11 @@ array(
     3: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: f
-                )
+                name: f
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -84,12 +80,11 @@ array(
     4: Stmt_Expression(
         expr: Expr_FuncCall(
             name: Name(
-                parts: array(
-                    0: f
-                )
+                name: f
             )
             args: array(
                 0: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: a
                     )
@@ -97,6 +92,7 @@ array(
                     unpack: false
                 )
                 1: Arg(
+                    name: null
                     value: Expr_Variable(
                         name: b
                     )

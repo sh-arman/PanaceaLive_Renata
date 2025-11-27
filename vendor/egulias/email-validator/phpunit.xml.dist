@@ -1,29 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<phpunit backupGlobals="false"
-         backupStaticAttributes="false"
-         colors="true"
-         convertErrorsToExceptions="true"
-         convertNoticesToExceptions="true"
-         convertWarningsToExceptions="true"
-         processIsolation="false"
-         stopOnFailure="false"
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
          bootstrap="vendor/autoload.php"
+         colors="true"
+         executionOrder="defects"
+         cacheDirectory=".phpunit.cache"
 >
-<testsuites>
-  <testsuite name="EmailValidator Test Suite">
-    <directory>./Tests/EmailValidator</directory>
-    <exclude>./vendor/</exclude>
-  </testsuite>
-</testsuites>
+  <coverage/>
 
-<filter>
-  <whitelist>
-    <directory>./EmailValidator/</directory>
-  </whitelist>
-</filter>
+  <testsuites>
+    <testsuite name="EmailValidator Test Suite">
+      <directory>./tests/EmailValidator</directory>
+      <exclude>./vendor/</exclude>
+    </testsuite>
+  </testsuites>
 
-<listeners>
-  <listener class="Symfony\Bridge\PhpUnit\SymfonyTestsListener" />
-</listeners>
+  <source>
+    <include>
+      <directory>./src/</directory>
+    </include>
+    <exclude>
+      <directory suffix=".php">./src/Result/Reason</directory>
+    </exclude>
+  </source>
+
 </phpunit>

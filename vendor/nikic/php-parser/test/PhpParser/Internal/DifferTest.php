@@ -2,8 +2,7 @@
 
 namespace PhpParser\Internal;
 
-class DifferTest extends \PHPUnit\Framework\TestCase
-{
+class DifferTest extends \PHPUnit\Framework\TestCase {
     private function formatDiffString(array $diff) {
         $diffStr = '';
         foreach ($diff as $diffElem) {
@@ -29,13 +28,15 @@ class DifferTest extends \PHPUnit\Framework\TestCase
     }
 
     /** @dataProvider provideTestDiff */
-    public function testDiff($oldStr, $newStr, $expectedDiffStr) {
-        $differ = new Differ(function($a, $b) { return $a === $b; });
+    public function testDiff($oldStr, $newStr, $expectedDiffStr): void {
+        $differ = new Differ(function ($a, $b) {
+            return $a === $b;
+        });
         $diff = $differ->diff(str_split($oldStr), str_split($newStr));
         $this->assertSame($expectedDiffStr, $this->formatDiffString($diff));
     }
 
-    public function provideTestDiff() {
+    public static function provideTestDiff() {
         return [
             ['abc', 'abc', 'abc'],
             ['abc', 'abcdef', 'abc+d+e+f'],
@@ -48,18 +49,31 @@ class DifferTest extends \PHPUnit\Framework\TestCase
     }
 
     /** @dataProvider provideTestDiffWithReplacements */
-    public function testDiffWithReplacements($oldStr, $newStr, $expectedDiffStr) {
-        $differ = new Differ(function($a, $b) { return $a === $b; });
+    public function testDiffWithReplacements($oldStr, $newStr, $expectedDiffStr): void {
+        $differ = new Differ(function ($a, $b) {
+            return $a === $b;
+        });
         $diff = $differ->diffWithReplacements(str_split($oldStr), str_split($newStr));
         $this->assertSame($expectedDiffStr, $this->formatDiffString($diff));
     }
 
-    public function provideTestDiffWithReplacements() {
+    public static function provideTestDiffWithReplacements() {
         return [
             ['abcde', 'axyze', 'a/bx/cy/dze'],
             ['abcde', 'xbcdy', '/axbcd/ey'],
             ['abcde', 'axye', 'a-b-c-d+x+ye'],
             ['abcde', 'axyzue', 'a-b-c-d+x+y+z+ue'],
         ];
+    }
+
+    public function testNonContiguousIndices(): void {
+        $differ = new Differ(function ($a, $b) {
+            return $a === $b;
+        });
+        $diff = $differ->diff([0 => 'a', 2 => 'b'], [0 => 'a', 3 => 'b']);
+        $this->assertEquals([
+            new DiffElem(DiffElem::TYPE_KEEP, 'a', 'a'),
+            new DiffElem(DiffElem::TYPE_KEEP, 'b', 'b'),
+        ], $diff);
     }
 }

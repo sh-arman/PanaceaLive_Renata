@@ -9,7 +9,15 @@ class Order extends Model
     //
     protected $table = 'print_order';
 
-    protected $dates = ['mfg_date', 'expiry_date'];
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'mfg_date' => 'datetime',
+        'expiry_date' => 'datetime',
+    ];
 
     /**
      * The attributes that are mass assignable.
@@ -33,16 +41,16 @@ class Order extends Model
 
     public function codes()
     {
-        return $this->hasMany('App\Code');
+        return $this->hasMany(Code::class);
     }
 
     public function company()
     {
-        return $this->belongsTo('App\Company');
+        return $this->belongsTo(Company::class);
     }
 
     public function medicine()
     {
-        return $this->belongsTo('App\Medicine');
+        return $this->belongsTo(Medicine::class);
     }
 }

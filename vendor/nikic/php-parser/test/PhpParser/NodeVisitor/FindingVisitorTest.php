@@ -6,11 +6,10 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\NodeTraverser;
 
-class FindingVisitorTest extends \PHPUnit\Framework\TestCase
-{
-    public function testFindVariables() {
+class FindingVisitorTest extends \PHPUnit\Framework\TestCase {
+    public function testFindVariables(): void {
         $traverser = new NodeTraverser();
-        $visitor = new FindingVisitor(function(Node $node) {
+        $visitor = new FindingVisitor(function (Node $node) {
             return $node instanceof Node\Expr\Variable;
         });
         $traverser->addVisitor($visitor);
@@ -28,9 +27,9 @@ class FindingVisitorTest extends \PHPUnit\Framework\TestCase
         ], $visitor->getFoundNodes());
     }
 
-    public function testFindAll() {
+    public function testFindAll(): void {
         $traverser = new NodeTraverser();
-        $visitor = new FindingVisitor(function(Node $node) {
+        $visitor = new FindingVisitor(function (Node $node) {
             return true; // All nodes
         });
         $traverser->addVisitor($visitor);

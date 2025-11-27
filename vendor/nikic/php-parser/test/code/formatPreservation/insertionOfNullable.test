@@ -16,7 +16,7 @@ $foo
 ];
 
 [
-    $value
+    & $value
 ];
 
 function
@@ -49,6 +49,10 @@ X
     private
         $x
     ;
+
+    const
+    X
+    = 1;
 }
 
 foreach (
@@ -86,6 +90,7 @@ $stmts[9]->expr = new Expr\Variable('x');
 $stmts[10]->extends = new Node\Name\FullyQualified('Bar');
 $stmts[10]->stmts[0]->returnType = new Node\Name('Y');
 $stmts[10]->stmts[1]->props[0]->default = new Scalar\DNumber(42.0);
+$stmts[10]->stmts[2]->type = new Node\Identifier('int');
 $stmts[11]->keyVar = new Expr\Variable('z');
 $stmts[12]->vars[0]->default = new Scalar\String_('abc');
 $stmts[13]->finally = new Stmt\Finally_([]);
@@ -99,7 +104,7 @@ function
 foo(
 int $x,
 array &$y = null
-) : Foo
+): Foo
 {}
 
 $foo
@@ -107,11 +112,11 @@ $foo
 ];
 
 [
-    'X' => $value
+    'X' => & $value
 ];
 
 function
-() : Bar
+(): Bar
 {};
 
 $x
@@ -134,12 +139,16 @@ class
 X extends \Bar
 {
     public
-    function y() : Y
+    function y(): Y
     {}
 
     private
         $x = 42.0
     ;
+
+    const int
+    X
+    = 1;
 }
 
 foreach (
@@ -174,3 +183,21 @@ $stmts[0]->name = new Node\Name('Foo');
 
 namespace Foo
 { echo 42; }
+-----
+<?php
+try
+{
+}
+catch (Exception)
+{
+}
+-----
+$stmts[0]->catches[0]->var = new Expr\Variable('e');
+-----
+<?php
+try
+{
+}
+catch (Exception $e)
+{
+}

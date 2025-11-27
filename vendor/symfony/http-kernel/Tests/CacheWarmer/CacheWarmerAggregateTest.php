@@ -12,35 +12,25 @@
 namespace Symfony\Component\HttpKernel\Tests\CacheWarmer;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerAggregate;
+use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
 class CacheWarmerAggregateTest extends TestCase
 {
-    protected static $cacheDir;
-
-    public static function setUpBeforeClass(): void
-    {
-        self::$cacheDir = tempnam(sys_get_temp_dir(), 'sf_cache_warmer_dir');
-    }
-
-    public static function tearDownAfterClass(): void
-    {
-        @unlink(self::$cacheDir);
-    }
-
     public function testInjectWarmersUsingConstructor()
     {
-        $warmer = $this->getCacheWarmerMock();
+        $warmer = $this->createMock(CacheWarmerInterface::class);
         $warmer
             ->expects($this->once())
             ->method('warmUp');
         $aggregate = new CacheWarmerAggregate([$warmer]);
-        $aggregate->warmUp(self::$cacheDir);
+        $aggregate->warmUp(__DIR__);
     }
 
     public function testWarmupDoesCallWarmupOnOptionalWarmersWhenEnableOptionalWarmersIsEnabled()
     {
-        $warmer = $this->getCacheWarmerMock();
+        $warmer = $this->createMock(CacheWarmerInterface::class);
         $warmer
             ->expects($this->never())
             ->method('isOptional');
@@ -50,12 +40,12 @@ class CacheWarmerAggregateTest extends TestCase
 
         $aggregate = new CacheWarmerAggregate([$warmer]);
         $aggregate->enableOptionalWarmers();
-        $aggregate->warmUp(self::$cacheDir);
+        $aggregate->warmUp(__DIR__);
     }
 
     public function testWarmupDoesNotCallWarmupOnOptionalWarmersWhenEnableOptionalWarmersIsNotEnabled()
     {
-        $warmer = $this->getCacheWarmerMock();
+        $warmer = $this->createMock(CacheWarmerInterface::class);
         $warmer
             ->expects($this->once())
             ->method('isOptional')
@@ -65,15 +55,121 @@ class CacheWarmerAggregateTest extends TestCase
             ->method('warmUp');
 
         $aggregate = new CacheWarmerAggregate([$warmer]);
-        $aggregate->warmUp(self::$cacheDir);
+        $aggregate->warmUp(__DIR__);
     }
 
-    protected function getCacheWarmerMock()
+    public function testWarmupReturnsFilesOrClasses()
     {
-        $warmer = $this->getMockBuilder('Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface')
-            ->disableOriginalConstructor()
-            ->getMock();
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $warmer
+            ->expects($this->never())
+            ->method('isOptional');
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp')
+            ->willReturn([__CLASS__, __FILE__]);
 
-        return $warmer;
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->enableOptionalWarmers();
+
+        $this->assertSame([__CLASS__, __FILE__], $aggregate->warmUp(__DIR__));
+    }
+
+    public function testWarmupChecksInvalidFiles()
+    {
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $warmer
+            ->expects($this->never())
+            ->method('isOptional');
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp')
+            ->willReturn([self::class, __DIR__]);
+
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->enableOptionalWarmers();
+
+        $this->expectException(\LogicException::class);
+        $aggregate->warmUp(__DIR__);
+    }
+
+    public function testWarmupPassBuildDir()
+    {
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp')
+            ->with('cache_dir', 'build_dir');
+
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->enableOptionalWarmers();
+        $aggregate->warmUp('cache_dir', 'build_dir');
+    }
+
+    public function testWarmupOnOptionalWarmerPassBuildDir()
+    {
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $warmer
+            ->expects($this->once())
+            ->method('isOptional')
+            ->willReturn(true);
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp')
+            ->with('cache_dir', 'build_dir');
+
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->enableOnlyOptionalWarmers();
+        $aggregate->warmUp('cache_dir', 'build_dir');
+    }
+
+    public function testWarmupWhenDebugDisplaysWarmupDuration()
+    {
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $io = $this->createMock(SymfonyStyle::class);
+
+        $io
+            ->expects($this->once())
+            ->method('isDebug')
+            ->willReturn(true)
+        ;
+
+        $io
+            ->expects($this->once())
+            ->method('info')
+            ->with($this->matchesRegularExpression('/"(.+)" completed in (.+)ms\./'))
+        ;
+
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp');
+
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->warmUp(__DIR__, null, $io);
+    }
+
+    public function testWarmupWhenNotDebugDoesntDisplayWarmupDuration()
+    {
+        $warmer = $this->createMock(CacheWarmerInterface::class);
+        $io = $this->createMock(SymfonyStyle::class);
+
+        $io
+            ->expects($this->once())
+            ->method('isDebug')
+            ->willReturn(false)
+        ;
+
+        $io
+            ->expects($this->never())
+            ->method('info')
+            ->with($this->matchesRegularExpression('/"(.+)" completed in (.+)ms\./'))
+        ;
+
+        $warmer
+            ->expects($this->once())
+            ->method('warmUp');
+
+        $aggregate = new CacheWarmerAggregate([$warmer]);
+        $aggregate->warmUp(__DIR__, null, $io);
     }
 }

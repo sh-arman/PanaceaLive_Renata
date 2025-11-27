@@ -13,22 +13,19 @@ namespace Symfony\Component\HttpKernel\Tests\Fragment;
 
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Fragment\FragmentHandler;
+use Symfony\Component\HttpKernel\Fragment\FragmentRendererInterface;
 
-/**
- * @group time-sensitive
- */
 class FragmentHandlerTest extends TestCase
 {
-    private $requestStack;
+    private RequestStack $requestStack;
 
     protected function setUp(): void
     {
-        $this->requestStack = $this->getMockBuilder('Symfony\\Component\\HttpFoundation\\RequestStack')
-            ->disableOriginalConstructor()
-            ->getMock()
-        ;
+        $this->requestStack = $this->createMock(RequestStack::class);
         $this->requestStack
             ->expects($this->any())
             ->method('getCurrentRequest')
@@ -38,38 +35,60 @@ class FragmentHandlerTest extends TestCase
 
     public function testRenderWhenRendererDoesNotExist()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         $handler = new FragmentHandler($this->requestStack);
         $handler->render('/', 'foo');
     }
 
     public function testRenderWithUnknownRenderer()
     {
-        $this->expectException('InvalidArgumentException');
-        $handler = $this->getHandler($this->returnValue(new Response('foo')));
+        $this->expectException(\InvalidArgumentException::class);
+        $handler = $this->getHandler(new Response('foo'));
 
         $handler->render('/', 'bar');
     }
 
     public function testDeliverWithUnsuccessfulResponse()
     {
-        $this->expectException('RuntimeException');
-        $this->expectExceptionMessage('Error when rendering "http://localhost/" (Status code is 404).');
-        $handler = $this->getHandler($this->returnValue(new Response('foo', 404)));
+        $handler = $this->getHandler(new Response('foo', 404));
+        try {
+            $handler->render('/', 'foo');
+            $this->fail('->render() throws a \RuntimeException exception if response is not successful');
+        } catch (\Exception $e) {
+            $this->assertInstanceOf(\RuntimeException::class, $e);
+            $this->assertEquals(0, $e->getCode());
+            $this->assertEquals('Error when rendering "http://localhost/" (Status code is 404).', $e->getMessage());
 
-        $handler->render('/', 'foo');
+            $previousException = $e->getPrevious();
+            $this->assertInstanceOf(HttpException::class, $previousException);
+            $this->assertEquals(404, $previousException->getStatusCode());
+            $this->assertEquals(0, $previousException->getCode());
+        }
     }
 
     public function testRender()
     {
-        $handler = $this->getHandler($this->returnValue(new Response('foo')), ['/', Request::create('/'), ['foo' => 'foo', 'ignore_errors' => true]]);
+        $expectedRequest = Request::create('/');
+        $handler = $this->getHandler(
+            new Response('foo'),
+            [
+                '/',
+                $this->callback(function (Request $request) use ($expectedRequest) {
+                    $expectedRequest->server->remove('REQUEST_TIME_FLOAT');
+                    $request->server->remove('REQUEST_TIME_FLOAT');
+
+                    return $expectedRequest == $request;
+                }),
+                ['foo' => 'foo', 'ignore_errors' => true],
+            ]
+        );
 
         $this->assertEquals('foo', $handler->render('/', 'foo', ['foo' => 'foo']));
     }
 
     protected function getHandler($returnValue, $arguments = [])
     {
-        $renderer = $this->getMockBuilder('Symfony\Component\HttpKernel\Fragment\FragmentRendererInterface')->getMock();
+        $renderer = $this->createMock(FragmentRendererInterface::class);
         $renderer
             ->expects($this->any())
             ->method('getName')
@@ -78,7 +97,7 @@ class FragmentHandlerTest extends TestCase
         $e = $renderer
             ->expects($this->any())
             ->method('render')
-            ->will($returnValue)
+            ->willReturn($returnValue)
         ;
 
         if ($arguments) {

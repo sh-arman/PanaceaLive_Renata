@@ -7,7 +7,7 @@ interface QueueingFactory extends Factory
     /**
      * Queue a cookie to send with the next response.
      *
-     * @param  array  $parameters
+     * @param  mixed  ...$parameters
      * @return void
      */
     public function queue(...$parameters);
@@ -17,6 +17,7 @@ interface QueueingFactory extends Factory
      *
      * @param  string  $name
      * @param  string|null  $path
+     * @return void
      */
     public function unqueue($name, $path = null);
 

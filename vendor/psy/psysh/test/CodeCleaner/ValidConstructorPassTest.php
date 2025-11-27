@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,46 +13,51 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\ValidConstructorPass;
 
+/**
+ * @group isolation-fail
+ */
 class ValidConstructorPassTest extends CodeCleanerTestCase
 {
-    protected function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new ValidConstructorPass());
     }
 
     /**
      * @dataProvider invalidStatements
-     * @expectedException \Psy\Exception\FatalErrorException
      */
     public function testProcessInvalidStatement($code)
     {
+        $this->expectException(\Psy\Exception\FatalErrorException::class);
         $this->parseAndTraverse($code);
+
+        $this->fail();
     }
 
     /**
      * @dataProvider invalidParserStatements
-     * @expectedException \Psy\Exception\ParseErrorException
      */
     public function testProcessInvalidStatementCatchedByParser($code)
     {
+        $this->expectException(\Psy\Exception\ParseErrorException::class);
         $this->parseAndTraverse($code);
+
+        $this->fail();
     }
 
     public function invalidStatements()
     {
-        $data = [
+        return [
             ['class A { public static function A() {}}'],
             ['class A { public static function a() {}}'],
             ['class A { private static function A() {}}'],
             ['class A { private static function a() {}}'],
+            ['class A { public function A(): ?array {}}'],
+            ['class A { public function a(): ?array {}}'],
         ];
-
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            $data[] = ['class A { public function A(): ?array {}}'];
-            $data[] = ['class A { public function a(): ?array {}}'];
-        }
-
-        return $data;
     }
 
     public function invalidParserStatements()
@@ -76,18 +81,31 @@ class ValidConstructorPassTest extends CodeCleanerTestCase
 
     public function validStatements()
     {
-        $data = [
+        return [
             ['class A { public static function A() {} public function __construct() {}}'],
             ['class A { private function __construct() {} public static function A() {}}'],
             ['namespace B; class A { private static function A() {}}'],
+            ['class A { public static function A() {} public function __construct() {}}'],
+            ['class A { private function __construct() {} public static function A(): ?array {}}'],
+            ['namespace B; class A { private static function A(): ?array {}}'],
         ];
+    }
 
-        if (\version_compare(PHP_VERSION, '7.0', '>=')) {
-            $data[] = ['class A { public static function A() {} public function __construct() {}}'];
-            $data[] = ['class A { private function __construct() {} public static function A(): ?array {}}'];
-            $data[] = ['namespace B; class A { private static function A(): ?array {}}'];
-        }
+    /**
+     * @dataProvider anonymousClasses
+     */
+    public function testAnonymousClasses($code)
+    {
+        $this->parseAndTraverse($code);
+        $this->assertTrue(true);
+    }
 
-        return $data;
+    public function anonymousClasses()
+    {
+        return [
+            ['new class() { public function __construct() {} }'],
+            ['new class() { public function f(): void {} }'],
+            ['new class() { private function f(): void {} public function __construct() {} }'],
+        ];
     }
 }

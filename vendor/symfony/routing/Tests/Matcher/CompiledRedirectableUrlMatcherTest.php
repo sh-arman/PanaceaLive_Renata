@@ -19,21 +19,21 @@ use Symfony\Component\Routing\RouteCollection;
 
 class CompiledRedirectableUrlMatcherTest extends RedirectableUrlMatcherTest
 {
-    protected function getUrlMatcher(RouteCollection $routes, RequestContext $context = null)
+    protected function getUrlMatcher(RouteCollection $routes, ?RequestContext $context = null)
     {
         $dumper = new CompiledUrlMatcherDumper($routes);
         $compiledRoutes = $dumper->getCompiledRoutes();
 
         return $this->getMockBuilder(TestCompiledRedirectableUrlMatcher::class)
-            ->setConstructorArgs([$compiledRoutes, $context ?: new RequestContext()])
-            ->setMethods(['redirect'])
+            ->setConstructorArgs([$compiledRoutes, $context ?? new RequestContext()])
+            ->onlyMethods(['redirect'])
             ->getMock();
     }
 }
 
 class TestCompiledRedirectableUrlMatcher extends CompiledUrlMatcher implements RedirectableUrlMatcherInterface
 {
-    public function redirect($path, $route, $scheme = null)
+    public function redirect(string $path, string $route, ?string $scheme = null): array
     {
         return [];
     }

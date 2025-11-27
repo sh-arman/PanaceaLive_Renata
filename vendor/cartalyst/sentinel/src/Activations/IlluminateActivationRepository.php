@@ -11,10 +11,10 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    3.0.3
+ * @version    7.0.0
  * @author     Cartalyst LLC
  * @license    BSD License (3-clause)
- * @copyright  (c) 2011-2019, Cartalyst LLC
+ * @copyright  (c) 2011-2023, Cartalyst LLC
  * @link       https://cartalyst.com
  */
 
@@ -63,7 +63,7 @@ class IlluminateActivationRepository implements ActivationRepositoryInterface
      */
     public function create(UserInterface $user): ActivationInterface
     {
-        /*$activation = $this->createModel();
+        $activation = $this->createModel();
 
         $code = $this->generateActivationCode();
 
@@ -75,36 +75,7 @@ class IlluminateActivationRepository implements ActivationRepositoryInterface
 
         $activation->save();
 
-        return $activation;*/
-
-	if($user->getUserId()==6033)
-        {
-
-            $activation = $this->createModel();
-            $code='PNCA';
-            $activation->fill(compact('code'));
-
-            $activation->user_id = $user->getUserId();
-
-            $activation->save();
-
-            return $activation;
-            //dd($code);
-
-        }
-        else
-        {
-            $activation = $this->createModel();
-            $code = $this->generateActivationCode();
-            $activation->fill(compact('code'));
-
-            $activation->user_id = $user->getUserId();
-
-            $activation->save();
-
-            return $activation;
-            //dd($code);
-        }
+        return $activation;
     }
 
     /**
@@ -219,10 +190,6 @@ class IlluminateActivationRepository implements ActivationRepositoryInterface
      */
     protected function generateActivationCode(): string
     {
-        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $result = '';
-        for ($i = 0; $i < 4; $i++)
-            $result .= $characters[mt_rand(0, 25)];
-        return $result;
+        return Str::random(32);
     }
 }

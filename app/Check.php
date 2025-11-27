@@ -24,6 +24,6 @@ class Check extends Model
 
     public function code()
     {
-        return $this->belongsTo('App\Code');
+        return $this->belongsTo(Code::class);
     }
 }

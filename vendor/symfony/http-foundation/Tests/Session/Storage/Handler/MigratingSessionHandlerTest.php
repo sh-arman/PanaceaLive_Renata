@@ -11,14 +11,15 @@
 
 namespace Symfony\Component\HttpFoundation\Tests\Session\Storage\Handler;
 
+use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpFoundation\Session\Storage\Handler\MigratingSessionHandler;
 
 class MigratingSessionHandlerTest extends TestCase
 {
-    private $dualHandler;
-    private $currentHandler;
-    private $writeOnlyHandler;
+    private MigratingSessionHandler $dualHandler;
+    private MockObject&\SessionHandlerInterface $currentHandler;
+    private MockObject&\SessionHandlerInterface $writeOnlyHandler;
 
     protected function setUp(): void
     {
@@ -51,6 +52,8 @@ class MigratingSessionHandlerTest extends TestCase
 
     public function testDestroy()
     {
+        $this->dualHandler->open('/path/to/save/location', 'xyz');
+
         $sessionId = 'xyz';
 
         $this->currentHandler->expects($this->once())
@@ -75,15 +78,14 @@ class MigratingSessionHandlerTest extends TestCase
         $this->currentHandler->expects($this->once())
             ->method('gc')
             ->with($maxlifetime)
-            ->willReturn(true);
+            ->willReturn(1);
 
         $this->writeOnlyHandler->expects($this->once())
             ->method('gc')
             ->with($maxlifetime)
             ->willReturn(false);
 
-        $result = $this->dualHandler->gc($maxlifetime);
-        $this->assertTrue($result);
+        $this->assertSame(1, $this->dualHandler->gc($maxlifetime));
     }
 
     public function testOpen()

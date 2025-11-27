@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -14,7 +14,7 @@ namespace Psy\Test\Reflection;
 use Psy\Reflection\ReflectionLanguageConstruct;
 use Psy\Reflection\ReflectionLanguageConstructParameter;
 
-class ReflectionLanguageConstructParameterTest extends \PHPUnit\Framework\TestCase
+class ReflectionLanguageConstructParameterTest extends \Psy\Test\TestCase
 {
     public function testOptions()
     {
@@ -28,7 +28,7 @@ class ReflectionLanguageConstructParameterTest extends \PHPUnit\Framework\TestCa
         ]);
 
         $this->assertNull($refl->getClass());
-        $this->assertEquals('one', $refl->getName());
+        $this->assertSame('one', $refl->getName());
         $this->assertFalse($refl->isArray());
         $this->assertTrue($refl->isDefaultValueAvailable());
         $this->assertNull($refl->getDefaultValue());
@@ -42,7 +42,7 @@ class ReflectionLanguageConstructParameterTest extends \PHPUnit\Framework\TestCa
         ]);
 
         $this->assertNull($refl->getClass());
-        $this->assertEquals('two', $reflTwo->getName());
+        $this->assertSame('two', $reflTwo->getName());
         $this->assertTrue($reflTwo->isArray());
         $this->assertFalse($reflTwo->isDefaultValueAvailable());
         $this->assertNull($reflTwo->getDefaultValue());
@@ -54,10 +54,10 @@ class ReflectionLanguageConstructParameterTest extends \PHPUnit\Framework\TestCa
         ]);
 
         $this->assertNull($refl->getClass());
-        $this->assertEquals('three', $refl->getName());
+        $this->assertSame('three', $refl->getName());
         $this->assertFalse($refl->isArray());
         $this->assertTrue($refl->isDefaultValueAvailable());
-        $this->assertEquals(3, $refl->getDefaultValue());
+        $this->assertSame(3, $refl->getDefaultValue());
         $this->assertFalse($refl->isOptional());
         $this->assertFalse($refl->isPassedByReference());
     }

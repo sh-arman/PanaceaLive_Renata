@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -13,20 +13,28 @@ namespace Psy\Test\CodeCleaner;
 
 use Psy\CodeCleaner\ValidFunctionNamePass;
 
+/**
+ * @group isolation-fail
+ */
 class ValidFunctionNamePassTest extends CodeCleanerTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
         $this->setPass(new ValidFunctionNamePass());
     }
 
     /**
      * @dataProvider getInvalidFunctions
-     * @expectedException \Psy\Exception\FatalErrorException
      */
     public function testProcessInvalidFunctionCallsAndDeclarations($code)
     {
+        $this->expectException(\Psy\Exception\FatalErrorException::class);
         $this->parseAndTraverse($code);
+
+        $this->fail();
     }
 
     public function getInvalidFunctions()
@@ -45,14 +53,6 @@ class ValidFunctionNamePassTest extends CodeCleanerTestCase
                 }
                 namespace Psy\\Test\\CodeCleaner\\ValidFunctionNamePass {
                     function beta() {}
-                }
-            '],
-
-            // function calls
-            ['psy_test_codecleaner_validfunctionnamepass_gamma()'],
-            ['
-                namespace Psy\\Test\\CodeCleaner\\ValidFunctionNamePass {
-                    delta();
                 }
             '],
 
@@ -101,16 +101,6 @@ class ValidFunctionNamePassTest extends CodeCleanerTestCase
                 }
             '],
 
-            // function calls
-            ['array_merge();'],
-            ['
-                namespace Psy\\Test\\CodeCleaner\\ValidFunctionNamePass {
-                    function theta() {}
-                }
-                namespace Psy\\Test\\CodeCleaner\\ValidFunctionNamePass {
-                    theta();
-                }
-            '],
             // closures
             ['$test = function(){};$test()'],
             ['

@@ -1,6 +1,15 @@
 <?php
 
-namespace Symfony\Component\Translation\Tests\DependencyInjection\fixtures;
+/*
+ * This file is part of the Symfony package.
+ *
+ * (c) Fabien Potencier <fabien@symfony.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace Symfony\Component\Translation\Tests\DependencyInjection\Fixtures;
 
 use Psr\Container\ContainerInterface;
 use Symfony\Contracts\Service\ServiceSubscriberInterface;
@@ -12,7 +21,7 @@ class ServiceSubscriber implements ServiceSubscriberInterface
     {
     }
 
-    public static function getSubscribedServices()
+    public static function getSubscribedServices(): array
     {
         return ['translator' => TranslatorInterface::class];
     }

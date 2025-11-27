@@ -3,125 +3,151 @@
 namespace PhpOption\Tests;
 
 use PhpOption\None;
+use PhpOption\Some;
+use PHPUnit\Framework\TestCase;
 
-class NoneTest extends \PHPUnit_Framework_TestCase
+class NoneTest extends TestCase
 {
-    private $none;
-
-    /**
-     * @expectedException \RuntimeException
-     */
-    public function testGet()
+    public function testGet(): void
     {
-        $none = \PhpOption\None::create();
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('RuntimeException');
+        } else {
+            $this->setExpectedException('RuntimeException');
+        }
+
+        $none = None::create();
         $none->get();
     }
 
-    public function testGetOrElse()
+    public function testGetOrElse(): void
     {
-        $none = \PhpOption\None::create();
-        $this->assertEquals('foo', $none->getOrElse('foo'));
+        $none = None::create();
+        self::assertSame('foo', $none->getOrElse('foo'));
     }
 
-    public function testGetOrCall()
+    public function testGetOrCall(): void
     {
-        $none = \PhpOption\None::create();
-        $this->assertEquals('foo', $none->getOrCall(function() { return 'foo'; }));
+        $none = None::create();
+        self::assertSame('foo', $none->getOrCall(function () {
+            return 'foo';
+        }));
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage Not Found!
-     */
-    public function testGetOrThrow()
+    public function testGetOrThrow(): void
     {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('RuntimeException');
+            $this->expectExceptionMessage('Not Found!');
+        } else {
+            $this->setExpectedException('RuntimeException', 'Not Found!');
+        }
+
         None::create()->getOrThrow(new \RuntimeException('Not Found!'));
     }
 
-    public function testIsEmpty()
+    public function testIsEmpty(): void
     {
-        $none = \PhpOption\None::create();
-        $this->assertTrue($none->isEmpty());
+        $none = None::create();
+        self::assertTrue($none->isEmpty());
     }
 
-    public function testOrElse()
+    public function testOrElse(): void
     {
-        $option = \PhpOption\Some::create('foo');
-        $this->assertSame($option, \PhpOption\None::create()->orElse($option));
+        $option = Some::create('foo');
+        self::assertSame($option, None::create()->orElse($option));
     }
 
-    public function testifDefined()
+    public function testifDefined(): void
     {
-        $this->assertNull($this->none->ifDefined(function() {
+        $none = None::create();
+
+        self::assertNull($none->ifDefined(function () {
             throw new \LogicException('Should never be called.');
         }));
     }
 
-    public function testForAll()
+    public function testForAll(): void
     {
-        $this->assertSame($this->none, $this->none->forAll(function() {
+        $none = None::create();
+
+        self::assertSame($none, $none->forAll(function () {
             throw new \LogicException('Should never be called.');
         }));
     }
 
-    public function testMap()
+    public function testMap(): void
     {
-        $this->assertSame($this->none, $this->none->map(function() {
+        $none = None::create();
+
+        self::assertSame($none, $none->map(function () {
             throw new \LogicException('Should not be called.');
         }));
     }
 
-    public function testFlatMap()
+    public function testFlatMap(): void
     {
-        $this->assertSame($this->none, $this->none->flatMap(function() {
+        $none = None::create();
+
+        self::assertSame($none, $none->flatMap(function () {
             throw new \LogicException('Should not be called.');
         }));
     }
 
-    public function testFilter()
+    public function testFilter(): void
     {
-        $this->assertSame($this->none, $this->none->filter(function() {
+        $none = None::create();
+
+        self::assertSame($none, $none->filter(function () {
             throw new \LogicException('Should not be called.');
         }));
     }
 
-    public function testFilterNot()
+    public function testFilterNot(): void
     {
-        $this->assertSame($this->none, $this->none->filterNot(function() {
+        $none = None::create();
+
+        self::assertSame($none, $none->filterNot(function () {
             throw new \LogicException('Should not be called.');
         }));
     }
 
-    public function testSelect()
+    public function testSelect(): void
     {
-        $this->assertSame($this->none, $this->none->select(null));
+        $none = None::create();
+
+        self::assertSame($none, $none->select(null));
     }
 
-    public function testReject()
+    public function testReject(): void
     {
-        $this->assertSame($this->none, $this->none->reject(null));
+        $none = None::create();
+
+        self::assertSame($none, $none->reject(null));
     }
 
-    public function testForeach()
+    public function testForeach(): void
     {
-        $none = \PhpOption\None::create();
+        $none = None::create();
 
         $called = 0;
         foreach ($none as $value) {
             $called++;
         }
 
-        $this->assertEquals(0, $called);
+        self::assertSame(0, $called);
     }
 
-    public function testFoldLeftRight()
+    public function testFoldLeftRight(): void
     {
-        $this->assertSame(1, $this->none->foldLeft(1, function() { $this->fail(); }));
-        $this->assertSame(1, $this->none->foldRight(1, function() { $this->fail(); }));
-    }
+        $none = None::create();
 
-    protected function setUp()
-    {
-        $this->none = None::create();
+        self::assertSame(1, $none->foldLeft(1, function () {
+            $this->fail();
+        }));
+
+        self::assertSame(1, $none->foldRight(1, function () {
+            $this->fail();
+        }));
     }
 }

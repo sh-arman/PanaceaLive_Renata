@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -11,32 +11,32 @@
 
 namespace Psy\Test\Reflection;
 
-use Psy\Reflection\ReflectionConstant_;
+use Psy\Reflection\ReflectionConstant;
 
-\define('Psy\\Test\\Reflection\\SOME_CONSTANT', 'yep');
+const SOME_CONSTANT = 'yep';
 
-class ReflectionConstantTest extends \PHPUnit\Framework\TestCase
+class ReflectionConstantTest extends \Psy\Test\TestCase
 {
     public function testConstruction()
     {
-        $refl = new ReflectionConstant_('Psy\\Test\\Reflection\\SOME_CONSTANT');
+        $refl = new ReflectionConstant('Psy\\Test\\Reflection\\SOME_CONSTANT');
 
         $this->assertFalse($refl->getDocComment());
-        $this->assertEquals('Psy\\Test\\Reflection\\SOME_CONSTANT', $refl->getName());
-        $this->assertEquals('Psy\\Test\\Reflection', $refl->getNamespaceName());
-        $this->assertEquals('yep', $refl->getValue());
+        $this->assertSame('Psy\\Test\\Reflection\\SOME_CONSTANT', $refl->getName());
+        $this->assertSame('Psy\\Test\\Reflection', $refl->getNamespaceName());
+        $this->assertSame('yep', $refl->getValue());
         $this->assertTrue($refl->inNamespace());
-        $this->assertEquals('Psy\\Test\\Reflection\\SOME_CONSTANT', (string) $refl);
+        $this->assertSame('Psy\\Test\\Reflection\\SOME_CONSTANT', (string) $refl);
         $this->assertNull($refl->getFileName());
     }
 
     public function testBuiltInConstant()
     {
-        $refl = new ReflectionConstant_('PHP_VERSION');
+        $refl = new ReflectionConstant('PHP_VERSION');
 
-        $this->assertEquals('PHP_VERSION', $refl->getName());
-        $this->assertEquals('PHP_VERSION', (string) $refl);
-        $this->assertEquals(PHP_VERSION, $refl->getValue());
+        $this->assertSame('PHP_VERSION', $refl->getName());
+        $this->assertSame('PHP_VERSION', (string) $refl);
+        $this->assertSame(\PHP_VERSION, $refl->getValue());
         $this->assertFalse($refl->inNamespace());
         $this->assertSame('', $refl->getNamespaceName());
     }
@@ -46,7 +46,7 @@ class ReflectionConstantTest extends \PHPUnit\Framework\TestCase
      */
     public function testIsMagicConstant($name, $is)
     {
-        $this->assertEquals($is, ReflectionConstant_::isMagicConstant($name));
+        $this->assertSame($is, ReflectionConstant::isMagicConstant($name));
     }
 
     public function magicConstants()
@@ -68,40 +68,43 @@ class ReflectionConstantTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    /**
-     * @expectedException \InvalidArgumentException
-     */
     public function testUnknownConstantThrowsException()
     {
-        new ReflectionConstant_('UNKNOWN_CONSTANT');
+        $this->expectException(\InvalidArgumentException::class);
+        new ReflectionConstant('UNKNOWN_CONSTANT');
+
+        $this->fail();
     }
 
     public function testExport()
     {
-        $ret = ReflectionConstant_::export('Psy\\Test\\Reflection\\SOME_CONSTANT', true);
-        $this->assertEquals($ret, 'Constant [ string Psy\\Test\\Reflection\\SOME_CONSTANT ] { yep }');
+        $ret = ReflectionConstant::export('Psy\\Test\\Reflection\\SOME_CONSTANT', true);
+        $this->assertSame($ret, 'Constant [ string Psy\\Test\\Reflection\\SOME_CONSTANT ] { yep }');
     }
 
     public function testExportOutput()
     {
         $this->expectOutputString("Constant [ string Psy\\Test\\Reflection\\SOME_CONSTANT ] { yep }\n");
-        ReflectionConstant_::export('Psy\\Test\\Reflection\\SOME_CONSTANT', false);
+        ReflectionConstant::export('Psy\\Test\\Reflection\\SOME_CONSTANT', false);
     }
 
     public function testGetFileName()
     {
-        $refl = new ReflectionConstant_('Psy\\Test\\Reflection\\SOME_CONSTANT');
+        $refl = new ReflectionConstant('Psy\\Test\\Reflection\\SOME_CONSTANT');
         $this->assertNull($refl->getFileName());
     }
 
     /**
-     * @expectedException \RuntimeException
      * @dataProvider notYetImplemented
      */
     public function testNotYetImplemented($method)
     {
-        $refl = new ReflectionConstant_('Psy\\Test\\Reflection\\SOME_CONSTANT');
+        $this->expectException(\RuntimeException::class);
+
+        $refl = new ReflectionConstant('Psy\\Test\\Reflection\\SOME_CONSTANT');
         $refl->$method();
+
+        $this->fail();
     }
 
     public function notYetImplemented()

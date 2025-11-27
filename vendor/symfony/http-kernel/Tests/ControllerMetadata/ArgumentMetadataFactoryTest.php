@@ -15,16 +15,15 @@ use Fake\ImportedAndFake;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
+use Symfony\Component\HttpKernel\Tests\Fixtures\Attribute\Foo;
+use Symfony\Component\HttpKernel\Tests\Fixtures\Controller\AttributeController;
 use Symfony\Component\HttpKernel\Tests\Fixtures\Controller\BasicTypesController;
 use Symfony\Component\HttpKernel\Tests\Fixtures\Controller\NullableController;
 use Symfony\Component\HttpKernel\Tests\Fixtures\Controller\VariadicController;
 
 class ArgumentMetadataFactoryTest extends TestCase
 {
-    /**
-     * @var ArgumentMetadataFactory
-     */
-    private $factory;
+    private ArgumentMetadataFactory $factory;
 
     protected function setUp(): void
     {
@@ -33,7 +32,7 @@ class ArgumentMetadataFactoryTest extends TestCase
 
     public function testSignature1()
     {
-        $arguments = $this->factory->createArgumentMetadata([$this, 'signature1']);
+        $arguments = $this->factory->createArgumentMetadata($this->signature1(...));
 
         $this->assertEquals([
             new ArgumentMetadata('foo', self::class, false, false, null),
@@ -44,28 +43,28 @@ class ArgumentMetadataFactoryTest extends TestCase
 
     public function testSignature2()
     {
-        $arguments = $this->factory->createArgumentMetadata([$this, 'signature2']);
+        $arguments = $this->factory->createArgumentMetadata($this->signature2(...));
 
         $this->assertEquals([
             new ArgumentMetadata('foo', self::class, false, true, null, true),
-            new ArgumentMetadata('bar', __NAMESPACE__.'\FakeClassThatDoesNotExist', false, true, null, true),
+            new ArgumentMetadata('bar', FakeClassThatDoesNotExist::class, false, true, null, true),
             new ArgumentMetadata('baz', 'Fake\ImportedAndFake', false, true, null, true),
         ], $arguments);
     }
 
     public function testSignature3()
     {
-        $arguments = $this->factory->createArgumentMetadata([$this, 'signature3']);
+        $arguments = $this->factory->createArgumentMetadata($this->signature3(...));
 
         $this->assertEquals([
-            new ArgumentMetadata('bar', __NAMESPACE__.'\FakeClassThatDoesNotExist', false, false, null),
+            new ArgumentMetadata('bar', FakeClassThatDoesNotExist::class, false, false, null),
             new ArgumentMetadata('baz', 'Fake\ImportedAndFake', false, false, null),
         ], $arguments);
     }
 
     public function testSignature4()
     {
-        $arguments = $this->factory->createArgumentMetadata([$this, 'signature4']);
+        $arguments = $this->factory->createArgumentMetadata($this->signature4(...));
 
         $this->assertEquals([
             new ArgumentMetadata('foo', null, false, true, 'default'),
@@ -76,11 +75,11 @@ class ArgumentMetadataFactoryTest extends TestCase
 
     public function testSignature5()
     {
-        $arguments = $this->factory->createArgumentMetadata([$this, 'signature5']);
+        $arguments = $this->factory->createArgumentMetadata($this->signature5(...));
 
         $this->assertEquals([
             new ArgumentMetadata('foo', 'array', false, true, null, true),
-            new ArgumentMetadata('bar', null, false, false, null),
+            new ArgumentMetadata('bar', null, false, true, null, true),
         ], $arguments);
     }
 
@@ -105,6 +104,17 @@ class ArgumentMetadataFactoryTest extends TestCase
         ], $arguments);
     }
 
+    public function testNamedClosure()
+    {
+        $arguments = $this->factory->createArgumentMetadata($this->signature1(...));
+
+        $this->assertEquals([
+            new ArgumentMetadata('foo', self::class, false, false, null),
+            new ArgumentMetadata('bar', 'array', false, false, null),
+            new ArgumentMetadata('baz', 'callable', false, false, null),
+        ], $arguments);
+    }
+
     public function testNullableTypesSignature()
     {
         $arguments = $this->factory->createArgumentMetadata([new NullableController(), 'action']);
@@ -113,27 +123,51 @@ class ArgumentMetadataFactoryTest extends TestCase
             new ArgumentMetadata('foo', 'string', false, false, null, true),
             new ArgumentMetadata('bar', \stdClass::class, false, false, null, true),
             new ArgumentMetadata('baz', 'string', false, true, 'value', true),
-            new ArgumentMetadata('mandatory', null, false, false, null, true),
+            new ArgumentMetadata('last', 'string', false, true, '', false),
         ], $arguments);
     }
 
-    private function signature1(self $foo, array $bar, callable $baz)
+    public function testAttributeSignature()
+    {
+        $arguments = $this->factory->createArgumentMetadata([new AttributeController(), 'action']);
+
+        $this->assertEquals([
+            new ArgumentMetadata('baz', 'string', false, false, null, false, [new Foo('bar')]),
+        ], $arguments);
+    }
+
+    public function testMultipleAttributes()
+    {
+        $this->factory->createArgumentMetadata([new AttributeController(), 'multiAttributeArg']);
+        $this->assertCount(1, $this->factory->createArgumentMetadata([new AttributeController(), 'multiAttributeArg'])[0]->getAttributes());
+    }
+
+    public function testIssue41478()
+    {
+        $arguments = $this->factory->createArgumentMetadata([new AttributeController(), 'issue41478']);
+        $this->assertEquals([
+            new ArgumentMetadata('baz', 'string', false, false, null, false, [new Foo('bar')]),
+            new ArgumentMetadata('bat', 'string', false, false, null, false, []),
+        ], $arguments);
+    }
+
+    public function signature1(self $foo, array $bar, callable $baz)
     {
     }
 
-    private function signature2(self $foo = null, FakeClassThatDoesNotExist $bar = null, ImportedAndFake $baz = null)
+    public function signature2(?self $foo = null, ?FakeClassThatDoesNotExist $bar = null, ?ImportedAndFake $baz = null)
     {
     }
 
-    private function signature3(FakeClassThatDoesNotExist $bar, ImportedAndFake $baz)
+    public function signature3(FakeClassThatDoesNotExist $bar, ImportedAndFake $baz)
     {
     }
 
-    private function signature4($foo = 'default', $bar = 500, $baz = [])
+    public function signature4($foo = 'default', $bar = 500, $baz = [])
     {
     }
 
-    private function signature5(array $foo = null, $bar)
+    public function signature5(?array $foo = null, $bar = null)
     {
     }
 }

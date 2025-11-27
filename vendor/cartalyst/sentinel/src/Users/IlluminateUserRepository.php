@@ -11,10 +11,10 @@
  * bundled with this package in the LICENSE file.
  *
  * @package    Sentinel
- * @version    3.0.3
+ * @version    7.0.0
  * @author     Cartalyst LLC
  * @license    BSD License (3-clause)
- * @copyright  (c) 2011-2019, Cartalyst LLC
+ * @copyright  (c) 2011-2023, Cartalyst LLC
  * @link       https://cartalyst.com
  */
 
@@ -155,26 +155,7 @@ class IlluminateUserRepository implements UserRepositoryInterface
      */
     public function validForCreation(array $credentials): bool
     {
-        /* this was the original lines for this function, but changed it to create users without password
-            return $this->validateUser($credentials);
-        */
-        
-        $id = null;
-        
-        $instance = $this->createModel();
-
-        $loginNames = $instance->getLoginNames();
-
-        // We will simply parse credentials which checks logins and passwords
-        list($logins, $password, $credentials) = $this->parseCredentials($credentials, $loginNames);
-
-        if ($id === null) {
-            if (empty($logins)) {
-                throw new InvalidArgumentException('No [login] credential was passed.');
-            }
-        }
-
-        return true;
+        return $this->validateUser($credentials);
     }
 
     /**

@@ -12,13 +12,13 @@
 namespace Symfony\Component\EventDispatcher\Tests\Debug;
 
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\ErrorHandler\BufferingLogger;
 use Symfony\Component\EventDispatcher\Debug\TraceableEventDispatcher;
-use Symfony\Component\EventDispatcher\Event;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\Stopwatch\Stopwatch;
-use Symfony\Contracts\EventDispatcher\Event as ContractsEvent;
+use Symfony\Contracts\EventDispatcher\Event;
 
 class TraceableEventDispatcherTest extends TestCase
 {
@@ -125,6 +125,18 @@ class TraceableEventDispatcherTest extends TestCase
         $this->assertEquals([], $tdispatcher->getNotCalledListeners());
     }
 
+    public function testGetNotCalledClosureListeners()
+    {
+        $instantiationCount = 0;
+
+        $tdispatcher = new TraceableEventDispatcher(new EventDispatcher(), new Stopwatch());
+        $tdispatcher->addListener('foo', [static function () use (&$instantiationCount) { ++$instantiationCount; }, 'onFoo']);
+
+        $tdispatcher->getNotCalledListeners();
+
+        $this->assertSame(0, $instantiationCount);
+    }
+
     public function testClearCalledListeners()
     {
         $tdispatcher = new TraceableEventDispatcher(new EventDispatcher(), new Stopwatch());
@@ -138,19 +150,6 @@ class TraceableEventDispatcherTest extends TestCase
         unset($listeners[0]['stub']);
         $this->assertEquals([], $tdispatcher->getCalledListeners());
         $this->assertEquals([['event' => 'foo', 'pretty' => 'closure', 'priority' => 5]], $listeners);
-    }
-
-    public function testDispatchContractsEvent()
-    {
-        $expectedEvent = new ContractsEvent();
-        $tdispatcher = new TraceableEventDispatcher(new EventDispatcher(), new Stopwatch());
-        $tdispatcher->addListener('foo', function ($event) use ($expectedEvent) {
-            $this->assertSame($event, $expectedEvent);
-        }, 5);
-        $tdispatcher->dispatch($expectedEvent, 'foo');
-
-        $listeners = $tdispatcher->getCalledListeners();
-        $this->assertArrayHasKey('stub', $listeners[0]);
     }
 
     public function testDispatchAfterReset()
@@ -183,7 +182,7 @@ class TraceableEventDispatcherTest extends TestCase
     {
         $tdispatcher = new TraceableEventDispatcher(new EventDispatcher(), new Stopwatch());
         $events = $tdispatcher->getOrphanedEvents();
-        $this->assertEmpty($events);
+        $this->assertSame([], $events);
     }
 
     public function testItReturnsOrphanedEventsAfterDispatch()
@@ -201,38 +200,62 @@ class TraceableEventDispatcherTest extends TestCase
         $tdispatcher->addListener('foo', function () {});
         $tdispatcher->dispatch(new Event(), 'foo');
         $events = $tdispatcher->getOrphanedEvents();
-        $this->assertEmpty($events);
+        $this->assertSame([], $events);
     }
 
     public function testLogger()
     {
-        $logger = $this->getMockBuilder('Psr\Log\LoggerInterface')->getMock();
+        $logger = new BufferingLogger();
 
         $dispatcher = new EventDispatcher();
         $tdispatcher = new TraceableEventDispatcher($dispatcher, new Stopwatch(), $logger);
         $tdispatcher->addListener('foo', $listener1 = function () {});
         $tdispatcher->addListener('foo', $listener2 = function () {});
 
-        $logger->expects($this->at(0))->method('debug')->with('Notified event "{event}" to listener "{listener}".', ['event' => 'foo', 'listener' => 'closure']);
-        $logger->expects($this->at(1))->method('debug')->with('Notified event "{event}" to listener "{listener}".', ['event' => 'foo', 'listener' => 'closure']);
-
         $tdispatcher->dispatch(new Event(), 'foo');
+
+        $this->assertSame([
+            [
+                'debug',
+                'Notified event "{event}" to listener "{listener}".',
+                ['event' => 'foo', 'listener' => 'closure'],
+            ],
+            [
+                'debug',
+                'Notified event "{event}" to listener "{listener}".',
+                ['event' => 'foo', 'listener' => 'closure'],
+            ],
+        ], $logger->cleanLogs());
     }
 
     public function testLoggerWithStoppedEvent()
     {
-        $logger = $this->getMockBuilder('Psr\Log\LoggerInterface')->getMock();
+        $logger = new BufferingLogger();
 
         $dispatcher = new EventDispatcher();
         $tdispatcher = new TraceableEventDispatcher($dispatcher, new Stopwatch(), $logger);
         $tdispatcher->addListener('foo', $listener1 = function (Event $event) { $event->stopPropagation(); });
         $tdispatcher->addListener('foo', $listener2 = function () {});
 
-        $logger->expects($this->at(0))->method('debug')->with('Notified event "{event}" to listener "{listener}".', ['event' => 'foo', 'listener' => 'closure']);
-        $logger->expects($this->at(1))->method('debug')->with('Listener "{listener}" stopped propagation of the event "{event}".', ['event' => 'foo', 'listener' => 'closure']);
-        $logger->expects($this->at(2))->method('debug')->with('Listener "{listener}" was not called for event "{event}".', ['event' => 'foo', 'listener' => 'closure']);
-
         $tdispatcher->dispatch(new Event(), 'foo');
+
+        $this->assertSame([
+            [
+                'debug',
+                'Notified event "{event}" to listener "{listener}".',
+                ['event' => 'foo', 'listener' => 'closure'],
+            ],
+            [
+                'debug',
+                'Listener "{listener}" stopped propagation of the event "{event}".',
+                ['event' => 'foo', 'listener' => 'closure'],
+            ],
+            [
+                'debug',
+                'Listener "{listener}" was not called for event "{event}".',
+                ['event' => 'foo', 'listener' => 'closure'],
+            ],
+        ], $logger->cleanLogs());
     }
 
     public function testDispatchCallListeners()
@@ -312,7 +335,7 @@ class TraceableEventDispatcherTest extends TestCase
 
 class EventSubscriber implements EventSubscriberInterface
 {
-    public static function getSubscribedEvents()
+    public static function getSubscribedEvents(): array
     {
         return ['foo' => 'call'];
     }

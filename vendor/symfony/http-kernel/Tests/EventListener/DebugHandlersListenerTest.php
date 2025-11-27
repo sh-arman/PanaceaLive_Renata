@@ -12,15 +12,14 @@
 namespace Symfony\Component\HttpKernel\Tests\EventListener;
 
 use PHPUnit\Framework\TestCase;
-use Psr\Log\LogLevel;
+use Symfony\Component\Console\Application;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\ConsoleEvents;
 use Symfony\Component\Console\Event\ConsoleEvent;
 use Symfony\Component\Console\Helper\HelperSet;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
-use Symfony\Component\Debug\ErrorHandler;
-use Symfony\Component\Debug\ExceptionHandler;
+use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Event\KernelEvent;
@@ -35,12 +34,9 @@ class DebugHandlersListenerTest extends TestCase
 {
     public function testConfigure()
     {
-        $logger = $this->getMockBuilder('Psr\Log\LoggerInterface')->getMock();
-        $userHandler = function () {};
-        $listener = new DebugHandlersListener($userHandler, $logger);
-        $xHandler = new ExceptionHandler();
+        $userHandler = static fn () => null;
+        $listener = new DebugHandlersListener($userHandler);
         $eHandler = new ErrorHandler();
-        $eHandler->setExceptionHandler([$xHandler, 'handle']);
 
         $exception = null;
         set_error_handler([$eHandler, 'handleError']);
@@ -48,20 +44,16 @@ class DebugHandlersListenerTest extends TestCase
         try {
             $listener->configure();
         } catch (\Exception $exception) {
+        } finally {
+            restore_exception_handler();
+            restore_error_handler();
         }
-        restore_exception_handler();
-        restore_error_handler();
 
         if (null !== $exception) {
             throw $exception;
         }
 
-        $this->assertSame($userHandler, $xHandler->setHandler('var_dump'));
-
-        $loggers = $eHandler->setLoggers([]);
-
-        $this->assertArrayHasKey(E_DEPRECATED, $loggers);
-        $this->assertSame([$logger, LogLevel::INFO], $loggers[E_DEPRECATED]);
+        $this->assertSame($userHandler, $eHandler->setExceptionHandler('var_dump'));
     }
 
     public function testConfigureForHttpKernelWithNoTerminateWithException()
@@ -69,9 +61,9 @@ class DebugHandlersListenerTest extends TestCase
         $listener = new DebugHandlersListener(null);
         $eHandler = new ErrorHandler();
         $event = new KernelEvent(
-            $this->getMockBuilder('Symfony\Component\HttpKernel\HttpKernelInterface')->getMock(),
+            $this->createMock(HttpKernelInterface::class),
             Request::create('/'),
-            HttpKernelInterface::MASTER_REQUEST
+            HttpKernelInterface::MAIN_REQUEST
         );
 
         $exception = null;
@@ -93,7 +85,7 @@ class DebugHandlersListenerTest extends TestCase
     {
         $dispatcher = new EventDispatcher();
         $listener = new DebugHandlersListener(null);
-        $app = $this->getMockBuilder('Symfony\Component\Console\Application')->getMock();
+        $app = $this->createMock(Application::class);
         $app->expects($this->once())->method('getHelperSet')->willReturn(new HelperSet());
         $command = new Command(__FUNCTION__);
         $command->setApplication($app);
@@ -104,7 +96,6 @@ class DebugHandlersListenerTest extends TestCase
         $xListeners = [
             KernelEvents::REQUEST => [[$listener, 'configure']],
             ConsoleEvents::COMMAND => [[$listener, 'configure']],
-            KernelEvents::EXCEPTION => [[$listener, 'onKernelException']],
         ];
         $this->assertSame($xListeners, $dispatcher->getListeners());
 
@@ -115,19 +106,20 @@ class DebugHandlersListenerTest extends TestCase
         try {
             $dispatcher->dispatch($event, ConsoleEvents::COMMAND);
         } catch (\Exception $exception) {
+        } finally {
+            restore_exception_handler();
+            restore_error_handler();
         }
-        restore_exception_handler();
-        restore_error_handler();
 
         if (null !== $exception) {
             throw $exception;
         }
 
         $xHandler = $eHandler->setExceptionHandler('var_dump');
-        $this->assertInstanceOf('Closure', $xHandler);
+        $this->assertInstanceOf(\Closure::class, $xHandler);
 
         $app->expects($this->once())
-            ->method('renderException');
+            ->method(method_exists(Application::class, 'renderThrowable') ? 'renderThrowable' : 'renderException');
 
         $xHandler(new \Exception());
     }

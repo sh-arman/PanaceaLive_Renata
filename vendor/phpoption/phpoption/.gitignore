@@ -1,3 +1,6 @@
-vendor/
-phpunit.xml
+.phpunit.result.cache
 composer.lock
+phpstan.src.neon
+phpstan.tests.neon
+phpunit.xml
+vendor

@@ -8,6 +8,8 @@ class MyClass {
 -----
 array(
     0: Stmt_Class(
+        attrGroups: array(
+        )
         flags: 0
         name: Identifier(
             name: MyClass
@@ -17,15 +19,19 @@ array(
         )
         stmts: array(
             0: Stmt_Property(
-                flags: MODIFIER_PROTECTED (2)
+                attrGroups: array(
+                )
+                flags: PROTECTED (2)
                 type: null
                 props: array(
-                    0: Stmt_PropertyProperty(
+                    0: PropertyItem(
                         name: VarLikeIdentifier(
                             name: a
                         )
                         default: null
                     )
+                )
+                hooks: array(
                 )
             )
             1: Stmt_Nop(

@@ -29,11 +29,11 @@ class Medicine extends Model
 
     public function company()
     {
-        return $this->belongsTo('App\Company');
+        return $this->belongsTo(Company::class);
     }
 
     public function codes()
     {
-        return $this->hasMany('App\Code');
+        return $this->hasMany(Code::class);
     }
 }

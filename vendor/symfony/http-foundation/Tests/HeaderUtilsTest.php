@@ -16,33 +16,49 @@ use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class HeaderUtilsTest extends TestCase
 {
-    public function testSplit()
+    /**
+     * @dataProvider provideHeaderToSplit
+     */
+    public function testSplit(array $expected, string $header, string $separator)
     {
-        $this->assertSame(['foo=123', 'bar'], HeaderUtils::split('foo=123,bar', ','));
-        $this->assertSame(['foo=123', 'bar'], HeaderUtils::split('foo=123, bar', ','));
-        $this->assertSame([['foo=123', 'bar']], HeaderUtils::split('foo=123; bar', ',;'));
-        $this->assertSame([['foo=123'], ['bar']], HeaderUtils::split('foo=123, bar', ',;'));
-        $this->assertSame(['foo', '123, bar'], HeaderUtils::split('foo=123, bar', '='));
-        $this->assertSame(['foo', '123, bar'], HeaderUtils::split(' foo = 123, bar ', '='));
-        $this->assertSame([['foo', '123'], ['bar']], HeaderUtils::split('foo=123, bar', ',='));
-        $this->assertSame([[['foo', '123']], [['bar'], ['foo', '456']]], HeaderUtils::split('foo=123, bar; foo=456', ',;='));
-        $this->assertSame([[['foo', 'a,b;c=d']]], HeaderUtils::split('foo="a,b;c=d"', ',;='));
+        $this->assertSame($expected, HeaderUtils::split($header, $separator));
+    }
 
-        $this->assertSame(['foo', 'bar'], HeaderUtils::split('foo,,,, bar', ','));
-        $this->assertSame(['foo', 'bar'], HeaderUtils::split(',foo, bar,', ','));
-        $this->assertSame(['foo', 'bar'], HeaderUtils::split(' , foo, bar, ', ','));
-        $this->assertSame(['foo bar'], HeaderUtils::split('foo "bar"', ','));
-        $this->assertSame(['foo bar'], HeaderUtils::split('"foo" bar', ','));
-        $this->assertSame(['foo bar'], HeaderUtils::split('"foo" "bar"', ','));
+    public static function provideHeaderToSplit(): array
+    {
+        return [
+            [['foo=123', 'bar'], 'foo=123,bar', ','],
+            [['foo=123', 'bar'], 'foo=123, bar', ','],
+            [[['foo=123', 'bar']], 'foo=123; bar', ',;'],
+            [[['foo=123'], ['bar']], 'foo=123, bar', ',;'],
+            [['foo', '123, bar'], 'foo=123, bar', '='],
+            [['foo', '123, bar'], ' foo = 123, bar ', '='],
+            [[['foo', '123'], ['bar']], 'foo=123, bar', ',='],
+            [[[['foo', '123']], [['bar'], ['foo', '456']]], 'foo=123, bar;; foo=456', ',;='],
+            [[[['foo', 'a,b;c=d']]], 'foo="a,b;c=d"', ',;='],
 
-        // These are not a valid header values. We test that they parse anyway,
-        // and that both the valid and invalid parts are returned.
-        $this->assertSame([], HeaderUtils::split('', ','));
-        $this->assertSame([], HeaderUtils::split(',,,', ','));
-        $this->assertSame(['foo', 'bar', 'baz'], HeaderUtils::split('foo, "bar", "baz', ','));
-        $this->assertSame(['foo', 'bar, baz'], HeaderUtils::split('foo, "bar, baz', ','));
-        $this->assertSame(['foo', 'bar, baz\\'], HeaderUtils::split('foo, "bar, baz\\', ','));
-        $this->assertSame(['foo', 'bar, baz\\'], HeaderUtils::split('foo, "bar, baz\\\\', ','));
+            [['foo', 'bar'], 'foo,,,, bar', ','],
+            [['foo', 'bar'], ',foo, bar,', ','],
+            [['foo', 'bar'], ' , foo, bar, ', ','],
+            [['foo bar'], 'foo "bar"', ','],
+            [['foo bar'], '"foo" bar', ','],
+            [['foo bar'], '"foo" "bar"', ','],
+
+            [[['foo_cookie', 'foo=1&bar=2&baz=3'], ['expires', 'Tue, 22-Sep-2020 06:27:09 GMT'], ['path', '/']], 'foo_cookie=foo=1&bar=2&baz=3; expires=Tue, 22-Sep-2020 06:27:09 GMT; path=/', ';='],
+            [[['foo_cookie', 'foo=='], ['expires', 'Tue, 22-Sep-2020 06:27:09 GMT'], ['path', '/']], 'foo_cookie=foo==; expires=Tue, 22-Sep-2020 06:27:09 GMT; path=/', ';='],
+            [[['foo_cookie', 'foo='], ['expires', 'Tue, 22-Sep-2020 06:27:09 GMT'], ['path', '/']], 'foo_cookie=foo=; expires=Tue, 22-Sep-2020 06:27:09 GMT; path=/', ';='],
+            [[['foo_cookie', 'foo=a=b'], ['expires', 'Tue, 22-Sep-2020 06:27:09 GMT'], ['path', '/']], 'foo_cookie=foo="a=b"; expires=Tue, 22-Sep-2020 06:27:09 GMT; path=/', ';='],
+
+            // These are not a valid header values. We test that they parse anyway,
+            // and that both the valid and invalid parts are returned.
+            [[], '', ','],
+            [[], ',,,', ','],
+            [[['', 'foo'], ['bar', '']], '=foo,bar=', ',='],
+            [['foo', 'foobar', 'baz'], 'foo, foo"bar", "baz', ','],
+            [['foo', 'bar, baz'], 'foo, "bar, baz', ','],
+            [['foo', 'bar, baz\\'], 'foo, "bar, baz\\', ','],
+            [['foo', 'bar, baz\\'], 'foo, "bar, baz\\\\', ','],
+        ];
     }
 
     public function testCombine()
@@ -85,7 +101,7 @@ class HeaderUtilsTest extends TestCase
 
     public function testMakeDispositionInvalidDisposition()
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         HeaderUtils::makeDisposition('invalid', 'foo.html');
     }
 
@@ -97,7 +113,7 @@ class HeaderUtilsTest extends TestCase
         $this->assertEquals($expected, HeaderUtils::makeDisposition($disposition, $filename, $filenameFallback));
     }
 
-    public function provideMakeDisposition()
+    public static function provideMakeDisposition()
     {
         return [
             ['attachment', 'foo.html', 'foo.html', 'attachment; filename=foo.html'],
@@ -114,11 +130,11 @@ class HeaderUtilsTest extends TestCase
      */
     public function testMakeDispositionFail($disposition, $filename)
     {
-        $this->expectException('InvalidArgumentException');
+        $this->expectException(\InvalidArgumentException::class);
         HeaderUtils::makeDisposition($disposition, $filename);
     }
 
-    public function provideMakeDispositionFail()
+    public static function provideMakeDispositionFail()
     {
         return [
             ['attachment', 'foo%20bar.html'],
@@ -128,5 +144,43 @@ class HeaderUtilsTest extends TestCase
             ['attachment', '\foo.html'],
             ['attachment', 'föö.html'],
         ];
+    }
+
+    /**
+     * @dataProvider provideParseQuery
+     */
+    public function testParseQuery(string $query, ?string $expected = null)
+    {
+        $this->assertSame($expected ?? $query, http_build_query(HeaderUtils::parseQuery($query), '', '&'));
+    }
+
+    public static function provideParseQuery()
+    {
+        return [
+            ['a=b&c=d'],
+            ['a.b=c'],
+            ['a+b=c'],
+            ["a\0b=c", 'a='],
+            ['a%00b=c', 'a=c'],
+            ['a[b=c', 'a%5Bb=c'],
+            ['a]b=c', 'a%5Db=c'],
+            ['a[b]=c', 'a%5Bb%5D=c'],
+            ['a[b][c.d]=c', 'a%5Bb%5D%5Bc.d%5D=c'],
+            ['a%5Bb%5D=c'],
+            ['f[%2525][%26][%3D][p.c]=d', 'f%5B%2525%5D%5B%26%5D%5B%3D%5D%5Bp.c%5D=d'],
+        ];
+    }
+
+    public function testParseCookie()
+    {
+        $query = 'a.b=c; def%5Bg%5D=h';
+        $this->assertSame($query, http_build_query(HeaderUtils::parseQuery($query, false, ';'), '', '; '));
+    }
+
+    public function testParseQueryIgnoreBrackets()
+    {
+        $this->assertSame(['a.b' => ['A', 'B']], HeaderUtils::parseQuery('a.b=A&a.b=B', true));
+        $this->assertSame(['a.b[]' => ['A']], HeaderUtils::parseQuery('a.b[]=A', true));
+        $this->assertSame(['a.b[]' => ['A']], HeaderUtils::parseQuery('a.b%5B%5D=A', true));
     }
 }

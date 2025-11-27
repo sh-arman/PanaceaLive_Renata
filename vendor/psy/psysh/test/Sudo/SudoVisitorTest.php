@@ -3,7 +3,7 @@
 /*
  * This file is part of Psy Shell.
  *
- * (c) 2012-2018 Justin Hileman
+ * (c) 2012-2025 Justin Hileman
  *
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
@@ -15,10 +15,17 @@ use PhpParser\NodeTraverser;
 use Psy\Sudo\SudoVisitor;
 use Psy\Test\ParserTestCase;
 
+/**
+ * @group isolation-fail
+ */
 class SudoVisitorTest extends ParserTestCase
 {
-    public function setUp()
+    /**
+     * @before
+     */
+    public function getReady()
     {
+        // @todo Pass visitor directly to once we drop support for PHP-Parser 4.x
         $this->traverser = new NodeTraverser();
         $this->traverser->addVisitor(new SudoVisitor());
     }
@@ -137,6 +144,24 @@ class SudoVisitorTest extends ParserTestCase
     {
         return [
             ['A::B', "\Psy\Sudo::fetchClassConst('A', 'B');"],
+        ];
+    }
+
+    /**
+     * @dataProvider newInstances
+     */
+    public function testNewInstance($from, $to)
+    {
+        $this->assertProcessesAs($from, $to);
+    }
+
+    public function newInstances()
+    {
+        return [
+            ['new A', "\Psy\Sudo::newInstance('A');"],
+            ['new A($b)', "\Psy\Sudo::newInstance('A', \$b);"],
+            ["new A(\$b, 'c')", "\Psy\Sudo::newInstance('A', \$b, 'c');"],
+            ["new \$a(\$b, 'c')", "\Psy\Sudo::newInstance(\$a, \$b, 'c');"],
         ];
     }
 }

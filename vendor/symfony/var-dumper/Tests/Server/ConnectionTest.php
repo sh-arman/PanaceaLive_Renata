@@ -24,10 +24,14 @@ class ConnectionTest extends TestCase
 
     public function testDump()
     {
+        if ('\\' === \DIRECTORY_SEPARATOR) {
+            $this->markTestSkipped('Skip transient test on Windows');
+        }
+
         $cloner = new VarCloner();
         $data = $cloner->cloneVar('foo');
         $connection = new Connection(self::VAR_DUMPER_SERVER, [
-            'foo_provider' => new class() implements ContextProviderInterface {
+            'foo_provider' => new class implements ContextProviderInterface {
                 public function getContext(): ?array
                 {
                     return ['foo'];
@@ -62,7 +66,7 @@ class ConnectionTest extends TestCase
 %d
 
 DUMP
-        , $dumped);
+            , $dumped);
     }
 
     public function testNoServer()
@@ -72,7 +76,7 @@ DUMP
         $connection = new Connection(self::VAR_DUMPER_SERVER);
         $start = microtime(true);
         $this->assertFalse($connection->write($data));
-        $this->assertLessThan(1, microtime(true) - $start);
+        $this->assertLessThan(4, microtime(true) - $start);
     }
 
     private function getServerProcess(): Process
@@ -81,7 +85,6 @@ DUMP
             'COMPONENT_ROOT' => __DIR__.'/../../',
             'VAR_DUMPER_SERVER' => self::VAR_DUMPER_SERVER,
         ]);
-        $process->inheritEnvironmentVariables(true);
 
         return $process->setTimeout(9);
     }

@@ -30,10 +30,9 @@ class DepthRangeFilterIteratorTest extends RealIteratorTestCase
         $this->assertEquals($expected, $actual);
     }
 
-    public function getAcceptData()
+    public static function getAcceptData()
     {
         $lessThan1 = [
-            '.gitignore',
             '.git',
             'test.py',
             'foo',
@@ -49,10 +48,10 @@ class DepthRangeFilterIteratorTest extends RealIteratorTestCase
             'qux_10_2.php',
             'qux_12_0.php',
             'qux_2_0.php',
+            'zebulon.php', 'Zephire.php',
         ];
 
         $lessThanOrEqualTo1 = [
-            '.gitignore',
             '.git',
             'test.py',
             'foo',
@@ -74,6 +73,7 @@ class DepthRangeFilterIteratorTest extends RealIteratorTestCase
             'qux_10_2.php',
             'qux_12_0.php',
             'qux_2_0.php',
+            'zebulon.php', 'Zephire.php',
         ];
 
         $graterThanOrEqualTo1 = [
@@ -95,11 +95,11 @@ class DepthRangeFilterIteratorTest extends RealIteratorTestCase
         ];
 
         return [
-            [0, 0, $this->toAbsolute($lessThan1)],
-            [0, 1, $this->toAbsolute($lessThanOrEqualTo1)],
-            [2, PHP_INT_MAX, []],
-            [1, PHP_INT_MAX, $this->toAbsolute($graterThanOrEqualTo1)],
-            [1, 1, $this->toAbsolute($equalTo1)],
+            [0, 0, self::toAbsolute($lessThan1)],
+            [0, 1, self::toAbsolute($lessThanOrEqualTo1)],
+            [2, \PHP_INT_MAX, []],
+            [1, \PHP_INT_MAX, self::toAbsolute($graterThanOrEqualTo1)],
+            [1, 1, self::toAbsolute($equalTo1)],
         ];
     }
 }

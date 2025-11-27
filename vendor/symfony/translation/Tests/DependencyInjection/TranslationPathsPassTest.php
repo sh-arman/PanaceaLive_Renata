@@ -18,11 +18,11 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Reference;
 use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\Translation\DependencyInjection\TranslatorPathsPass;
-use Symfony\Component\Translation\Tests\DependencyInjection\fixtures\ControllerArguments;
-use Symfony\Component\Translation\Tests\DependencyInjection\fixtures\ServiceArguments;
-use Symfony\Component\Translation\Tests\DependencyInjection\fixtures\ServiceMethodCalls;
-use Symfony\Component\Translation\Tests\DependencyInjection\fixtures\ServiceProperties;
-use Symfony\Component\Translation\Tests\DependencyInjection\fixtures\ServiceSubscriber;
+use Symfony\Component\Translation\Tests\DependencyInjection\Fixtures\ControllerArguments;
+use Symfony\Component\Translation\Tests\DependencyInjection\Fixtures\ServiceArguments;
+use Symfony\Component\Translation\Tests\DependencyInjection\Fixtures\ServiceMethodCalls;
+use Symfony\Component\Translation\Tests\DependencyInjection\Fixtures\ServiceProperties;
+use Symfony\Component\Translation\Tests\DependencyInjection\Fixtures\ServiceSubscriber;
 
 class TranslationPathsPassTest extends TestCase
 {
@@ -33,7 +33,7 @@ class TranslationPathsPassTest extends TestCase
         $debugCommand = $container->register('console.command.translation_debug')
             ->setArguments([null, null, null, null, null, [], []])
         ;
-        $updateCommand = $container->register('console.command.translation_update')
+        $updateCommand = $container->register('console.command.translation_extract')
             ->setArguments([null, null, null, null, null, null, [], []])
         ;
         $container->register(ControllerArguments::class, ControllerArguments::class)
@@ -72,7 +72,7 @@ class TranslationPathsPassTest extends TestCase
             ->setArguments([new Reference('.service_locator.bar')])
         ;
 
-        $pass = new TranslatorPathsPass('translator', 'console.command.translation_debug', 'console.command.translation_update', 'argument_resolver.service');
+        $pass = new TranslatorPathsPass();
         $pass->process($container);
 
         $expectedPaths = [

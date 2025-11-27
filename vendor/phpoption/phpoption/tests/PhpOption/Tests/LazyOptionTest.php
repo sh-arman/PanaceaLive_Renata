@@ -3,188 +3,355 @@
 namespace PhpOption\Tests;
 
 use PhpOption\LazyOption;
+use PhpOption\None;
+use PhpOption\Option;
+use PhpOption\Some;
+use PHPUnit\Framework\TestCase;
 
-class LazyOptionTest extends \PHPUnit_Framework_TestCase
+class LazyOptionTest extends TestCase
 {
-    private $subject;
-
-    public function setUp()
+    private static function createSubject($default = null): object
     {
-        $this->subject = $this
-            ->getMockBuilder('Subject')
-            ->setMethods(array('execute'))
-            ->getMock();
+        return new class ($default) {
+            private $default;
+
+            public function __construct($default)
+            {
+                $this->default = $default;
+            }
+
+            public function execute($v = null): Option
+            {
+                return Option::fromValue($v ?? $this->default);
+            }
+        };
     }
 
-    public function testGetWithArgumentsAndConstructor()
+    private static function createInvalidSubject(): object
     {
-        $some = \PhpOption\LazyOption::create(array($this->subject, 'execute'), array('foo'));
-
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->with('foo')
-            ->will($this->returnValue(\PhpOption\Some::create('foo')));
-
-        $this->assertEquals('foo', $some->get());
-        $this->assertEquals('foo', $some->getOrElse(null));
-        $this->assertEquals('foo', $some->getOrCall('does_not_exist'));
-        $this->assertEquals('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
-        $this->assertFalse($some->isEmpty());
+        return new class {
+            public function execute($v = null)
+            {
+                return null;
+            }
+        };
     }
 
-    public function testGetWithArgumentsAndCreate()
+    public function testGetWithArgumentsAndConstructor(): void
     {
-        $some = new \PhpOption\LazyOption(array($this->subject, 'execute'), array('foo'));
+        $some = LazyOption::create([self::createSubject(), 'execute'], ['foo']);
 
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->with('foo')
-            ->will($this->returnValue(\PhpOption\Some::create('foo')));
-
-        $this->assertEquals('foo', $some->get());
-        $this->assertEquals('foo', $some->getOrElse(null));
-        $this->assertEquals('foo', $some->getOrCall('does_not_exist'));
-        $this->assertEquals('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
-        $this->assertFalse($some->isEmpty());
+        self::assertSame('foo', $some->get());
+        self::assertSame('foo', $some->getOrElse(null));
+        self::assertSame('foo', $some->getOrCall('does_not_exist'));
+        self::assertSame('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
+        self::assertFalse($some->isEmpty());
     }
 
-    public function testGetWithoutArgumentsAndConstructor()
+    public function testGetWithArgumentsAndCreate(): void
     {
-        $some = new \PhpOption\LazyOption(array($this->subject, 'execute'));
+        $some = new LazyOption([self::createSubject(), 'execute'], ['foo']);
 
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->will($this->returnValue(\PhpOption\Some::create('foo')));
-
-        $this->assertEquals('foo', $some->get());
-        $this->assertEquals('foo', $some->getOrElse(null));
-        $this->assertEquals('foo', $some->getOrCall('does_not_exist'));
-        $this->assertEquals('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
-        $this->assertFalse($some->isEmpty());
+        self::assertSame('foo', $some->get());
+        self::assertSame('foo', $some->getOrElse(null));
+        self::assertSame('foo', $some->getOrCall('does_not_exist'));
+        self::assertSame('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
+        self::assertFalse($some->isEmpty());
     }
 
-    public function testGetWithoutArgumentsAndCreate()
+    public function testGetWithoutArgumentsAndConstructor(): void
     {
-        $option = \PhpOption\LazyOption::create(array($this->subject, 'execute'));
+        $some = new LazyOption([self::createSubject('foo'), 'execute']);
 
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->will($this->returnValue(\PhpOption\Some::create('foo')));
-
-        $this->assertTrue($option->isDefined());
-        $this->assertFalse($option->isEmpty());
-        $this->assertEquals('foo', $option->get());
-        $this->assertEquals('foo', $option->getOrElse(null));
-        $this->assertEquals('foo', $option->getOrCall('does_not_exist'));
-        $this->assertEquals('foo', $option->getOrThrow(new \RuntimeException('does_not_exist')));
+        self::assertSame('foo', $some->get());
+        self::assertSame('foo', $some->getOrElse(null));
+        self::assertSame('foo', $some->getOrCall('does_not_exist'));
+        self::assertSame('foo', $some->getOrThrow(new \RuntimeException('does_not_exist')));
+        self::assertFalse($some->isEmpty());
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage None has no value
-     */
-    public function testCallbackReturnsNull()
+    public function testGetWithoutArgumentsAndCreate(): void
     {
-        $option = \PhpOption\LazyOption::create(array($this->subject, 'execute'));
+        $option = LazyOption::create([self::createSubject('foo'), 'execute']);
 
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->will($this->returnValue(\PhpOption\None::create()));
+        self::assertTrue($option->isDefined());
+        self::assertFalse($option->isEmpty());
+        self::assertSame('foo', $option->get());
+        self::assertSame('foo', $option->getOrElse(null));
+        self::assertSame('foo', $option->getOrCall('does_not_exist'));
+        self::assertSame('foo', $option->getOrThrow(new \RuntimeException('does_not_exist')));
+    }
 
-        $this->assertFalse($option->isDefined());
-        $this->assertTrue($option->isEmpty());
-        $this->assertEquals('alt', $option->getOrElse('alt'));
-        $this->assertEquals('alt', $option->getOrCall(function(){return 'alt';}));
+    public function testCallbackReturnsNull(): void
+    {
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('RuntimeException');
+            $this->expectExceptionMessage('None has no value');
+        } else {
+            $this->setExpectedException('RuntimeException', 'None has no value');
+        }
+
+        $option = LazyOption::create([self::createSubject(), 'execute']);
+
+        self::assertFalse($option->isDefined());
+        self::assertTrue($option->isEmpty());
+        self::assertSame('alt', $option->getOrElse('alt'));
+        self::assertSame('alt', $option->getOrCall(function () {
+            return 'alt';
+        }));
 
         $option->get();
     }
 
-    /**
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessage Expected instance of \PhpOption\Option
-     */
-    public function testExceptionIsThrownIfCallbackReturnsNonOption()
+    public function testExceptionIsThrownIfCallbackReturnsNonOption(): void
     {
-        $option = \PhpOption\LazyOption::create(array($this->subject, 'execute'));
+        $option = LazyOption::create([self::createInvalidSubject(), 'execute']);
 
-        $this->subject
-            ->expects($this->once())
-            ->method('execute')
-            ->will($this->returnValue(null));
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('RuntimeException');
+            $this->expectExceptionMessage('Expected instance of PhpOption\Option');
+        } else {
+            $this->setExpectedException('RuntimeException', 'Expected instance of PhpOption\Option');
+        }
 
-        $this->assertFalse($option->isDefined());
+        $option->isDefined();
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Invalid callback given
-     */
-    public function testInvalidCallbackAndConstructor()
+    public function testInvalidCallbackAndConstructor(): void
     {
-        new \PhpOption\LazyOption('invalidCallback');
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('InvalidArgumentException');
+            $this->expectExceptionMessage('Invalid callback given');
+        } else {
+            $this->setExpectedException('InvalidArgumentException', 'Invalid callback given');
+        }
+
+        new LazyOption('invalidCallback');
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     * @expectedExceptionMessage Invalid callback given
-     */
-    public function testInvalidCallbackAndCreate()
+    public function testInvalidCallbackAndCreate(): void
     {
-        \PhpOption\LazyOption::create('invalidCallback');
+        if (method_exists($this, 'expectException')) {
+            $this->expectException('InvalidArgumentException');
+            $this->expectExceptionMessage('Invalid callback given');
+        } else {
+            $this->setExpectedException('InvalidArgumentException', 'Invalid callback given');
+        }
+
+        LazyOption::create('invalidCallback');
     }
 
-    public function testifDefined()
+    public function testifDefined(): void
     {
         $called = false;
         $self = $this;
-        $this->assertNull(LazyOption::fromValue('foo')->ifDefined(function($v) use (&$called, $self) {
+        LazyOption::fromValue('foo')->ifDefined(function ($v) use (&$called, $self) {
             $called = true;
-            $self->assertEquals('foo', $v);
-        }));
-        $this->assertTrue($called);
+            $self->assertSame('foo', $v);
+        });
+        self::assertTrue($called);
     }
 
-    public function testForAll()
+    public function testForAll(): void
     {
         $called = false;
         $self = $this;
-        $this->assertInstanceOf('PhpOption\Some', LazyOption::fromValue('foo')->forAll(function($v) use (&$called, $self) {
+        self::assertInstanceOf(Some::class, LazyOption::fromValue('foo')->forAll(function ($v) use (&$called, $self) {
             $called = true;
-            $self->assertEquals('foo', $v);
+            $self->assertSame('foo', $v);
         }));
-        $this->assertTrue($called);
+        self::assertTrue($called);
     }
 
-    public function testOrElse()
+    public function testOrElse(): void
     {
-        $some = \PhpOption\Some::create('foo');
-        $lazy = \PhpOption\LazyOption::create(function() use ($some) {return $some;});
-        $this->assertSame($some, $lazy->orElse(\PhpOption\None::create()));
-        $this->assertSame($some, $lazy->orElse(\PhpOption\Some::create('bar')));
+        $some = Some::create('foo');
+        $lazy = LazyOption::create(function () use ($some) {
+            return $some;
+        });
+        self::assertSame($some, $lazy->orElse(None::create()));
+        self::assertSame($some, $lazy->orElse(Some::create('bar')));
     }
 
-    public function testFoldLeftRight()
+    public function testFoldLeftRight(): void
     {
-        $callback = function() { };
+        $callback = function () {
+        };
 
-        $option = $this->getMockForAbstractClass('PhpOption\Option');
-        $option->expects($this->once())
+        // Use TestOption as a concrete implementation to test with
+        $option = self::createPartialMock(TestOption::class, ['foldLeft', 'foldRight']);
+        $option->expects(self::once())
             ->method('foldLeft')
             ->with(5, $callback)
-            ->will($this->returnValue(6));
-        $lazyOption = new LazyOption(function() use ($option) { return $option; });
-        $this->assertSame(6, $lazyOption->foldLeft(5, $callback));
+            ->willReturn(6);
+        $lazyOption = new LazyOption(function () use ($option) {
+            return $option;
+        });
+        self::assertSame(6, $lazyOption->foldLeft(5, $callback));
 
-        $option->expects($this->once())
+        $option->expects(self::once())
             ->method('foldRight')
             ->with(5, $callback)
-            ->will($this->returnValue(6));
-        $lazyOption = new LazyOption(function() use ($option) { return $option; });
-        $this->assertSame(6, $lazyOption->foldRight(5, $callback));
+            ->willReturn(6);
+        $lazyOption = new LazyOption(function () use ($option) {
+            return $option;
+        });
+        self::assertSame(6, $lazyOption->foldRight(5, $callback));
+    }
+}
+
+class TestOption extends Option
+{
+    private $value;
+
+    public function __construct($value = null)
+    {
+        $this->value = $value;
+    }
+
+    public function get()
+    {
+        return $this->value;
+    }
+
+    public function getOrElse($default)
+    {
+        if ($this->isDefined()) {
+            return $this->value;
+        }
+
+        return $default;
+    }
+
+    public function getOrCall($callable)
+    {
+        if ($this->isDefined()) {
+            return $this->value;
+        }
+
+        return call_user_func($callable);
+    }
+
+    public function getOrThrow(\Exception $ex)
+    {
+        if ($this->isDefined()) {
+            return $this->value;
+        }
+
+        throw $ex;
+    }
+
+    public function isEmpty()
+    {
+        return $this->value === null;
+    }
+
+    public function isDefined()
+    {
+        return $this->value !== null;
+    }
+
+    public function orElse(Option $else)
+    {
+        if ($this->isDefined()) {
+            return $this;
+        }
+
+        return $else;
+    }
+
+    public function ifDefined($callable)
+    {
+        if ($this->isDefined()) {
+            call_user_func($callable, $this->value);
+        }
+    }
+
+    public function forAll($callable)
+    {
+        if ($this->isDefined()) {
+            call_user_func($callable, $this->value);
+        }
+    }
+
+    public function map($callable)
+    {
+        if ($this->isDefined()) {
+            return new self(call_user_func($callable, $this->value));
+        }
+
+        return $this;
+    }
+
+    public function flatMap($callable)
+    {
+        if ($this->isDefined()) {
+            return call_user_func($callable, $this->value);
+        }
+
+        return $this;
+    }
+
+    public function filter($callable)
+    {
+        if ($this->isDefined() && call_user_func($callable, $this->value)) {
+            return $this;
+        }
+
+        return None::create();
+    }
+
+    public function filterNot($callable)
+    {
+        if ($this->isDefined() && !call_user_func($callable, $this->value)) {
+            return $this;
+        }
+
+        return None::create();
+    }
+
+    public function select($value)
+    {
+        if ($this->isDefined() && $this->value === $value) {
+            return $this;
+        }
+
+        return None::create();
+    }
+
+    public function reject($value)
+    {
+        if ($this->isDefined() && $this->value !== $value) {
+            return $this;
+        }
+
+        return None::create();
+    }
+
+    public function foldLeft($initialValue, $callable)
+    {
+        if ($this->isDefined()) {
+            return call_user_func($callable, $initialValue, $this->value);
+        }
+
+        return $initialValue;
+    }
+
+    public function foldRight($initialValue, $callable)
+    {
+        if ($this->isDefined()) {
+            return call_user_func($callable, $this->value, $initialValue);
+        }
+
+        return $initialValue;
+    }
+
+    public function getIterator(): \Traversable
+    {
+        if ($this->isDefined()) {
+            return new \ArrayIterator([$this->value]);
+        }
+
+        return new \ArrayIterator([]);
     }
 }

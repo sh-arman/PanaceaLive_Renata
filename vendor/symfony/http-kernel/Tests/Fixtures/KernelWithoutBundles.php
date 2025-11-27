@@ -17,21 +17,21 @@ use Symfony\Component\HttpKernel\Kernel;
 
 class KernelWithoutBundles extends Kernel
 {
-    public function registerBundles()
+    public function registerBundles(): iterable
     {
         return [];
     }
 
-    public function registerContainerConfiguration(LoaderInterface $loader)
+    public function registerContainerConfiguration(LoaderInterface $loader): void
     {
     }
 
-    public function getProjectDir()
+    public function getProjectDir(): string
     {
         return __DIR__;
     }
 
-    protected function build(ContainerBuilder $container)
+    protected function build(ContainerBuilder $container): void
     {
         $container->setParameter('test_executed', true);
     }

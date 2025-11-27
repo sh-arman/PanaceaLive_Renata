@@ -1,6 +1,6 @@
 <?php
 
-error_reporting(E_ALL | E_STRICT);
+error_reporting(E_ALL);
 ini_set('short_open_tag', false);
 
 if ('cli' !== php_sapi_name()) {
@@ -14,15 +14,23 @@ This script has to be called with the following signature:
 
     php run.php [--no-progress] testType pathToTestFiles
 
-The test type must be one of: PHP5, PHP7 or Symfony.
+The test type must be one of: PHP, Symfony
 
 The following options are available:
 
-    --no-progress    Disables showing which file is currently tested.
+    --no-progress            Disables showing which file is currently tested.
+    --verbose                Print more information for failures.
+    --php-version=VERSION    PHP version to use for lexing/parsing.
 
 OUTPUT
     );
 }
+
+$allowedOptions = [
+    '--no-progress' => true,
+    '--verbose' => true,
+    '--php-version' => true,
+];
 
 $options = array();
 $arguments = array();
@@ -32,34 +40,31 @@ array_shift($argv);
 
 foreach ($argv as $arg) {
     if ('-' === $arg[0]) {
-        $options[] = $arg;
+        $parts = explode('=', $arg);
+        $name = $parts[0];
+        if (!isset($allowedOptions[$name])) {
+            showHelp("Unknown option \"$name\"");
+        }
+        $options[$name] = $parts[1] ?? true;
     } else {
         $arguments[] = $arg;
     }
 }
 
 if (count($arguments) !== 2) {
-    showHelp('Too little arguments passed!');
+    showHelp('Too few arguments passed!');
 }
 
-$showProgress = true;
-$verbose = false;
-foreach ($options as $option) {
-    if ($option === '--no-progress') {
-        $showProgress = false;
-    } elseif ($option === '--verbose') {
-        $verbose = true;
-    } else {
-        showHelp('Invalid option passed!');
-    }
-}
-
+$showProgress = !isset($options['--no-progress']);
+$verbose = isset($options['--verbose']);
+$phpVersion = $options['--php-version'] ?? '8.0';
 $testType = $arguments[0];
 $dir = $arguments[1];
 
+require_once __DIR__ . '/../vendor/autoload.php';
+
 switch ($testType) {
     case 'Symfony':
-        $version = 'Php7';
         $fileFilter = function($path) {
             if (!preg_match('~\.php$~', $path)) {
                 return false;
@@ -82,9 +87,7 @@ switch ($testType) {
             return $code;
         };
         break;
-    case 'PHP5':
-    case 'PHP7':
-    $version = $testType === 'PHP5' ? 'Php5' : 'Php7';
+    case 'PHP':
         $fileFilter = function($path) {
             return preg_match('~\.phpt$~', $path);
         };
@@ -100,18 +103,26 @@ switch ($testType) {
 | Zend.tests.multibyte.multibyte_encoding_005
 # invalid code due to missing WS after opening tag
 | tests.run-test.bug75042-3
-# pretty print difference due to INF vs 1e1000
-| ext.standard.tests.general_functions.bug27678
-| tests.lang.bug24640
-| Zend.tests.bug74947
+# contains invalid chars, which we treat as parse error
+| Zend.tests.warning_during_heredoc_scan_ahead
 # pretty print differences due to negative LNumbers
 | Zend.tests.neg_num_string
+| Zend.tests.numeric_strings.neg_num_string
 | Zend.tests.bug72918
 # pretty print difference due to nop statements
 | ext.mbstring.tests.htmlent
 | ext.standard.tests.file.fread_basic
 # its too hard to emulate these on old PHP versions
 | Zend.tests.flexible-heredoc-complex-test[1-4]
+# whitespace in namespaced name
+| Zend.tests.bug55086
+| Zend.tests.grammar.regression_010
+# not worth emulating on old PHP versions
+| Zend.tests.type_declarations.intersection_types.parsing_comment
+# comments in property fetch syntax, not emulated on old PHP versions
+| Zend.tests.gh14961
+# harmless pretty print difference for clone($x, )
+| Zend.tests.clone.ast
 )\.phpt$~x', $file)) {
                 return null;
             }
@@ -127,17 +138,10 @@ switch ($testType) {
         };
         break;
     default:
-        showHelp('Test type must be one of: PHP5, PHP7 or Symfony');
+        showHelp('Test type must be one of: PHP or Symfony');
 }
 
-require_once __DIR__ . '/../vendor/autoload.php';
-
-$lexer = new PhpParser\Lexer\Emulative(['usedAttributes' => [
-    'comments', 'startLine', 'endLine', 'startTokenPos', 'endTokenPos',
-]]);
-$parserName = 'PhpParser\Parser\\' . $version;
-/** @var PhpParser\Parser $parser */
-$parser = new $parserName($lexer);
+$parser = (new PhpParser\ParserFactory())->createForVersion(PhpParser\PhpVersion::fromString($phpVersion));
 $prettyPrinter = new PhpParser\PrettyPrinter\Standard;
 $nodeDumper = new PhpParser\NodeDumper;
 
@@ -179,7 +183,7 @@ foreach (new RecursiveIteratorIterator(
         $origStmts = $parser->parse($origCode);
         $parseTime += microtime(true) - $startTime;
 
-        $origTokens = $lexer->getTokens();
+        $origTokens = $parser->getTokens();
 
         $startTime = microtime(true);
         $stmts = $cloningTraverser->traverse($origStmts);

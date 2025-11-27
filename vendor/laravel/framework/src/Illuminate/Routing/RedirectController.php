@@ -19,9 +19,11 @@ class RedirectController extends Controller
     {
         $parameters = collect($request->route()->parameters());
 
-        $status = $parameters->pop();
+        $status = $parameters->get('status');
 
-        $destination = $parameters->pop();
+        $destination = $parameters->get('destination');
+
+        $parameters->forget('status')->forget('destination');
 
         $route = (new Route('GET', $destination, [
             'as' => 'laravel_route_redirect_destination',
@@ -29,11 +31,11 @@ class RedirectController extends Controller
 
         $parameters = $parameters->only(
             $route->getCompiled()->getPathVariables()
-        )->toArray();
+        )->all();
 
         $url = $url->toRoute($route, $parameters, false);
 
-        if (! Str::startsWith($destination, '/') && Str::startsWith($url, '/')) {
+        if (! str_starts_with($destination, '/') && str_starts_with($url, '/')) {
             $url = Str::after($url, '/');
         }
 

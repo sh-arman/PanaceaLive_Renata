@@ -43,6 +43,19 @@ class PoFileDumperTest extends TestCase
 
         $dumper = new PoFileDumper();
 
-        $this->assertStringEqualsFile(__DIR__.'/../fixtures/resources.po', $dumper->formatCatalogue($catalogue, 'messages'));
+        $this->assertStringEqualsFile(__DIR__.'/../Fixtures/resources.po', $dumper->formatCatalogue($catalogue, 'messages'));
+    }
+
+    public function testDumpPlurals()
+    {
+        $catalogue = new MessageCatalogue('en');
+        $catalogue->add([
+            'foo|foos' => 'bar|bars',
+            '{0} no foos|one foo|%count% foos' => '{0} no bars|one bar|%count% bars',
+        ]);
+
+        $dumper = new PoFileDumper();
+
+        $this->assertStringEqualsFile(__DIR__.'/../Fixtures/plurals.po', $dumper->formatCatalogue($catalogue, 'messages'));
     }
 }

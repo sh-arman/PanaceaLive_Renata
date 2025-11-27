@@ -14,10 +14,15 @@ namespace Symfony\Component\Mime\Tests;
 use Symfony\Component\Mime\FileBinaryMimeTypeGuesser;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
 
-class FileBinaryMimeTypeGuesserTest extends AbstractMimeTypeGuesserTest
+class FileBinaryMimeTypeGuesserTest extends AbstractMimeTypeGuesserTestCase
 {
     protected function getGuesser(): MimeTypeGuesserInterface
     {
         return new FileBinaryMimeTypeGuesser();
+    }
+
+    public function testGuessWithDuplicatedFileType()
+    {
+        $this->markTestSkipped('Result varies depending on the OS');
     }
 }

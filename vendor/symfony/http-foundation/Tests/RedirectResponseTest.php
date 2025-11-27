@@ -20,22 +20,20 @@ class RedirectResponseTest extends TestCase
     {
         $response = new RedirectResponse('foo.bar');
 
-        $this->assertEquals(1, preg_match(
-            '#<meta http-equiv="refresh" content="\d+;url=foo\.bar" />#',
-            preg_replace(['/\s+/', '/\'/'], [' ', '"'], $response->getContent())
-        ));
+        $this->assertMatchesRegularExpression('#<meta http-equiv="refresh" content="\d+;url=\'foo\.bar\'" />#', preg_replace('/\s+/', ' ', $response->getContent()));
     }
 
-    public function testRedirectResponseConstructorNullUrl()
+    public function testRedirectResponseConstructorEmptyUrl()
     {
-        $this->expectException('InvalidArgumentException');
-        $response = new RedirectResponse(null);
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Cannot redirect to an empty URL.');
+        new RedirectResponse('');
     }
 
     public function testRedirectResponseConstructorWrongStatusCode()
     {
-        $this->expectException('InvalidArgumentException');
-        $response = new RedirectResponse('foo.bar', 404);
+        $this->expectException(\InvalidArgumentException::class);
+        new RedirectResponse('foo.bar', 404);
     }
 
     public function testGenerateLocationHeader()
@@ -44,6 +42,13 @@ class RedirectResponseTest extends TestCase
 
         $this->assertTrue($response->headers->has('Location'));
         $this->assertEquals('foo.bar', $response->headers->get('Location'));
+    }
+
+    public function testGenerateContentTypeHeader()
+    {
+        $response = new RedirectResponse('foo.bar');
+
+        $this->assertSame('text/html; charset=utf-8', $response->headers->get('Content-Type'));
     }
 
     public function testGetTargetUrl()
@@ -59,21 +64,6 @@ class RedirectResponseTest extends TestCase
         $response->setTargetUrl('baz.beep');
 
         $this->assertEquals('baz.beep', $response->getTargetUrl());
-    }
-
-    public function testSetTargetUrlNull()
-    {
-        $this->expectException('InvalidArgumentException');
-        $response = new RedirectResponse('foo.bar');
-        $response->setTargetUrl(null);
-    }
-
-    public function testCreate()
-    {
-        $response = RedirectResponse::create('foo', 301);
-
-        $this->assertInstanceOf('Symfony\Component\HttpFoundation\RedirectResponse', $response);
-        $this->assertEquals(301, $response->getStatusCode());
     }
 
     public function testCacheHeaders()

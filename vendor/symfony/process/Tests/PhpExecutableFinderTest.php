@@ -26,7 +26,7 @@ class PhpExecutableFinderTest extends TestCase
     {
         $f = new PhpExecutableFinder();
 
-        $current = PHP_BINARY;
+        $current = \PHP_BINARY;
         $args = 'phpdbg' === \PHP_SAPI ? ' -qrr' : '';
 
         $this->assertEquals($current.$args, $f->find(), '::find() returns the executable PHP');
@@ -41,9 +41,45 @@ class PhpExecutableFinderTest extends TestCase
         $f = new PhpExecutableFinder();
 
         if ('phpdbg' === \PHP_SAPI) {
-            $this->assertEquals($f->findArguments(), ['-qrr'], '::findArguments() returns phpdbg arguments');
+            $this->assertEquals(['-qrr'], $f->findArguments(), '::findArguments() returns phpdbg arguments');
         } else {
-            $this->assertEquals($f->findArguments(), [], '::findArguments() returns no arguments');
+            $this->assertEquals([], $f->findArguments(), '::findArguments() returns no arguments');
+        }
+    }
+
+    public function testNotExitsBinaryFile()
+    {
+        $f = new PhpExecutableFinder();
+
+        $originalPhpBinary = getenv('PHP_BINARY');
+
+        try {
+            putenv('PHP_BINARY=/usr/local/php/bin/php-invalid');
+
+            $this->assertFalse($f->find(), '::find() returns false because of not exist file');
+            $this->assertFalse($f->find(false), '::find(false) returns false because of not exist file');
+        } finally {
+            putenv('PHP_BINARY='.$originalPhpBinary);
+        }
+    }
+
+    public function testFindWithExecutableDirectory()
+    {
+        if ('\\' === \DIRECTORY_SEPARATOR) {
+            $this->markTestSkipped('Directories are not executable on Windows');
+        }
+
+        $originalPhpBinary = getenv('PHP_BINARY');
+
+        try {
+            $executableDirectoryPath = sys_get_temp_dir().'/PhpExecutableFinderTest_testFindWithExecutableDirectory';
+            @mkdir($executableDirectoryPath);
+            $this->assertTrue(is_executable($executableDirectoryPath));
+            putenv('PHP_BINARY='.$executableDirectoryPath);
+
+            $this->assertFalse((new PhpExecutableFinder())->find());
+        } finally {
+            putenv('PHP_BINARY='.$originalPhpBinary);
         }
     }
 }

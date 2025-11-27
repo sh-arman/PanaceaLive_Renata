@@ -66,7 +66,7 @@ class DumpListenerTest extends TestCase
 
 class MockCloner implements ClonerInterface
 {
-    public function cloneVar($var)
+    public function cloneVar($var): Data
     {
         return new Data([[$var.'-']]);
     }
@@ -74,8 +74,10 @@ class MockCloner implements ClonerInterface
 
 class MockDumper implements DataDumperInterface
 {
-    public function dump(Data $data)
+    public function dump(Data $data): ?string
     {
         echo '+'.$data->getValue();
+
+        return null;
     }
 }

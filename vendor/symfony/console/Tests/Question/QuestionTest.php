@@ -12,12 +12,11 @@
 namespace Symfony\Component\Console\Tests\Question;
 
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Question\Question;
 
 class QuestionTest extends TestCase
 {
-    private $question;
+    private Question $question;
 
     protected function setUp(): void
     {
@@ -25,7 +24,7 @@ class QuestionTest extends TestCase
         $this->question = new Question('Test question');
     }
 
-    public function providerTrueFalse()
+    public static function providerTrueFalse()
     {
         return [[true], [false]];
     }
@@ -63,7 +62,7 @@ class QuestionTest extends TestCase
     public function testSetHiddenWithAutocompleterCallback()
     {
         $this->question->setAutocompleterCallback(
-            function (string $input): array { return []; }
+            fn (string $input): array => []
         );
 
         $this->expectException(\LogicException::class);
@@ -77,7 +76,7 @@ class QuestionTest extends TestCase
     public function testSetHiddenWithNoAutocompleterCallback()
     {
         $this->question->setAutocompleterCallback(
-            function (string $input): array { return []; }
+            fn (string $input): array => []
         );
         $this->question->setAutocompleterCallback(null);
 
@@ -105,7 +104,7 @@ class QuestionTest extends TestCase
         self::assertTrue($this->question->isHiddenFallback());
     }
 
-    public function providerGetSetAutocompleterValues()
+    public static function providerGetSetAutocompleterValues()
     {
         return [
             'array' => [
@@ -136,11 +135,11 @@ class QuestionTest extends TestCase
         );
     }
 
-    public function providerSetAutocompleterValuesInvalid()
+    public static function providerSetAutocompleterValuesInvalid()
     {
         return [
             ['Potato'],
-            [new \stdclass()],
+            [new \stdClass()],
             [false],
         ];
     }
@@ -150,10 +149,7 @@ class QuestionTest extends TestCase
      */
     public function testSetAutocompleterValuesInvalid($values)
     {
-        self::expectException(InvalidArgumentException::class);
-        self::expectExceptionMessage(
-            'Autocompleter values can be either an array, "null" or a "Traversable" object.'
-        );
+        self::expectException(\TypeError::class);
 
         $this->question->setAutocompleterValues($values);
     }
@@ -161,7 +157,7 @@ class QuestionTest extends TestCase
     public function testSetAutocompleterValuesWithTraversable()
     {
         $question1 = new Question('Test question 1');
-        $iterator1 = $this->getMockForAbstractClass(\IteratorAggregate::class);
+        $iterator1 = $this->createMock(\IteratorAggregate::class);
         $iterator1
             ->expects($this->once())
             ->method('getIterator')
@@ -169,7 +165,7 @@ class QuestionTest extends TestCase
         $question1->setAutocompleterValues($iterator1);
 
         $question2 = new Question('Test question 2');
-        $iterator2 = $this->getMockForAbstractClass(\IteratorAggregate::class);
+        $iterator2 = $this->createMock(\IteratorAggregate::class);
         $iterator2
             ->expects($this->once())
             ->method('getIterator')
@@ -191,7 +187,7 @@ class QuestionTest extends TestCase
 
     public function testGetSetAutocompleterCallback()
     {
-        $callback = function (string $input): array { return []; };
+        $callback = fn (string $input): array => [];
 
         $this->question->setAutocompleterCallback($callback);
         self::assertSame($callback, $this->question->getAutocompleterCallback());
@@ -212,7 +208,7 @@ class QuestionTest extends TestCase
         );
 
         $this->question->setAutocompleterCallback(
-            function (string $input): array { return []; }
+            fn (string $input): array => []
         );
     }
 
@@ -224,7 +220,7 @@ class QuestionTest extends TestCase
         $exception = null;
         try {
             $this->question->setAutocompleterCallback(
-                function (string $input): array { return []; }
+                fn (string $input): array => []
             );
         } catch (\Exception $exception) {
             // Do nothing
@@ -233,10 +229,10 @@ class QuestionTest extends TestCase
         $this->assertNull($exception);
     }
 
-    public function providerGetSetValidator()
+    public static function providerGetSetValidator()
     {
         return [
-            [function ($input) { return $input; }],
+            [fn ($input) => $input],
             [null],
         ];
     }
@@ -255,7 +251,7 @@ class QuestionTest extends TestCase
         self::assertNull($this->question->getValidator());
     }
 
-    public function providerGetSetMaxAttempts()
+    public static function providerGetSetMaxAttempts()
     {
         return [[1], [5], [null]];
     }
@@ -269,9 +265,9 @@ class QuestionTest extends TestCase
         self::assertSame($attempts, $this->question->getMaxAttempts());
     }
 
-    public function providerSetMaxAttemptsInvalid()
+    public static function providerSetMaxAttemptsInvalid()
     {
-        return [['Potato'], [0], [-1]];
+        return [[0], [-1]];
     }
 
     /**
@@ -292,7 +288,7 @@ class QuestionTest extends TestCase
 
     public function testGetSetNormalizer()
     {
-        $normalizer = function ($input) { return $input; };
+        $normalizer = fn ($input) => $input;
         $this->question->setNormalizer($normalizer);
         self::assertSame($normalizer, $this->question->getNormalizer());
     }
@@ -300,5 +296,19 @@ class QuestionTest extends TestCase
     public function testGetNormalizerDefault()
     {
         self::assertNull($this->question->getNormalizer());
+    }
+
+    /**
+     * @dataProvider providerTrueFalse
+     */
+    public function testSetMultiline(bool $multiline)
+    {
+        self::assertSame($this->question, $this->question->setMultiline($multiline));
+        self::assertSame($multiline, $this->question->isMultiline());
+    }
+
+    public function testIsMultilineDefault()
+    {
+        self::assertFalse($this->question->isMultiline());
     }
 }

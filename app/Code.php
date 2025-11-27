@@ -22,14 +22,12 @@ class Code extends Model
     
     public function medicine()
     {
-        return $this->belongsTo('Panacea\Medicine');
-
+        return $this->belongsTo(Medicine::class);
     }
 
     public function order()
     {
-        return $this->belongsTo('Panacea\Order');
-
+        return $this->belongsTo(Order::class);
     }
 
     public static function CheckCodeValidity($code, $source)
