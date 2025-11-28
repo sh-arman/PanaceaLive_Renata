@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit460483bee68ea6a24c893bd4a580404d
+class ComposerStaticInit2f6eefb4366612c3b8a7661056fcb41a
 {
     public static $files = array (
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
@@ -4990,6 +4990,7 @@ class ComposerStaticInit460483bee68ea6a24c893bd4a580404d
         'Psy\\Exception\\Exception' => __DIR__ . '/..' . '/psy/psysh/src/Exception/Exception.php',
         'Psy\\Exception\\FatalErrorException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/FatalErrorException.php',
         'Psy\\Exception\\InterruptException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/InterruptException.php',
+        'Psy\\Exception\\InvalidManualException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/InvalidManualException.php',
         'Psy\\Exception\\ParseErrorException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/ParseErrorException.php',
         'Psy\\Exception\\RuntimeException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/RuntimeException.php',
         'Psy\\Exception\\ThrowUpException' => __DIR__ . '/..' . '/psy/psysh/src/Exception/ThrowUpException.php',
@@ -5017,8 +5018,6 @@ class ComposerStaticInit460483bee68ea6a24c893bd4a580404d
         'Psy\\Input\\SilentInput' => __DIR__ . '/..' . '/psy/psysh/src/Input/SilentInput.php',
         'Psy\\Logger\\CallbackLogger' => __DIR__ . '/..' . '/psy/psysh/src/Logger/CallbackLogger.php',
         'Psy\\ManualUpdater\\Checker' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/Checker.php',
-        'Psy\\ManualUpdater\\GhChecker' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/GhChecker.php',
-        'Psy\\ManualUpdater\\GhDownloader' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/GhDownloader.php',
         'Psy\\ManualUpdater\\GitHubChecker' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/GitHubChecker.php',
         'Psy\\ManualUpdater\\Installer' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/Installer.php',
         'Psy\\ManualUpdater\\IntervalChecker' => __DIR__ . '/..' . '/psy/psysh/src/ManualUpdater/IntervalChecker.php',
@@ -6776,9 +6775,9 @@ class ComposerStaticInit460483bee68ea6a24c893bd4a580404d
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit460483bee68ea6a24c893bd4a580404d::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit460483bee68ea6a24c893bd4a580404d::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit460483bee68ea6a24c893bd4a580404d::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit2f6eefb4366612c3b8a7661056fcb41a::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit2f6eefb4366612c3b8a7661056fcb41a::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit2f6eefb4366612c3b8a7661056fcb41a::$classMap;
 
         }, null, ClassLoader::class);
     }

@@ -10,6 +10,10 @@ ifneq ($(CI),)
 	PHPUNIT_OPTS = --verbose --coverage-clover=coverage.xml
 endif
 
+ifdef EXCLUDE_GROUP
+	PHPUNIT_OPTS += --exclude-group $(EXCLUDE_GROUP)
+endif
+
 
 # Commands
 
@@ -24,7 +28,7 @@ build: ## Compile psysh PHAR
 build: build/psysh/psysh
 
 clean: ## Clean all created artifacts
-	rm -rf build/*
+	rm -rf build/psysh build/stub
 	rm -rf dist/*
 	rm -rf vendor-bin/*/vendor/
 
@@ -55,6 +59,9 @@ phpstan: ## Run static analysis
 phpstan: vendor/bin/phpstan vendor/bin/phpunit
 	vendor/bin/phpstan --memory-limit=1G analyse
 
+phan: ## Run phan
+phan: vendor/bin/phan
+	vendor/bin/phan --allow-polyfill-parser
 
 # All the composer stuffs
 
@@ -82,16 +89,23 @@ vendor/bin/phpstan: vendor-bin/phpstan/vendor/autoload.php
 	composer bin phpstan install --ignore-platform-reqs
 	ln -sf ../../vendor-bin/phpstan/vendor/phpstan/phpstan/phpstan $@
 
+vendor/bin/phan: vendor/autoload.php
+	composer bin phan install --ignore-platform-reqs
+	ln -sf ../../vendor-bin/phan/vendor/phan/phan/phan $@
+	touch $@
+
 
 # Lots of PHARs
 
 build/stub: bin/build-stub bin/psysh LICENSE
 	bin/build-stub
 
-build/psysh: $(PSYSH_SRC) $(PSYSH_SRC_FILES)
+build/psysh: $(PSYSH_SRC) $(PSYSH_SRC_FILES) build/composer.json build/composer.lock
+	composer validate --check-lock --no-interaction --working-dir build
 	rm -rf $@ || true
 	mkdir $@
 	cp -R $(PSYSH_SRC) $@/
+	cp build/composer.json build/composer.lock $@/
 	@# Fetch and include latest PHP manual
 	@if bin/fetch-manual; then \
 		echo "Including bundled manual..."; \
@@ -101,11 +115,7 @@ build/psysh: $(PSYSH_SRC) $(PSYSH_SRC_FILES)
 		echo "Manual fetch failed, continuing without bundled manual"; \
 	fi
 	sed -i -e "/^ *const VERSION =/ s/'.*'/'$(VERSION)'/" $@/src/Shell.php
-	composer config --working-dir $@ platform.php 7.4
-	composer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) php:'>=7.4'
-	composer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) symfony/polyfill-iconv symfony/polyfill-mbstring composer/class-map-generator
-	composer require --working-dir $@ $(COMPOSER_REQUIRE_OPTS) --dev roave/security-advisories:dev-latest
-	composer update --working-dir $@ $(COMPOSER_UPDATE_OPTS)
+	composer install --working-dir $@ $(COMPOSER_INSTALL_OPTS)
 
 build/%/psysh: vendor/bin/box build/%
 	vendor/bin/box compile --no-parallel --working-dir $(dir $@)

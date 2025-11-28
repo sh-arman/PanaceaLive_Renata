@@ -124,61 +124,55 @@ class CodeCleanerTest extends TestCase
         ];
     }
 
-    public function testLooksLikeActionWithAssignment()
+    public function testNamespaceReEntryResetsUseStatements()
     {
         $cc = new CodeCleaner();
-        $this->assertTrue($cc->codeLooksLikeAction(['$x = new stdClass()']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$x += 5']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$x[] = 42']));
+
+        // Enter namespace A and add a use statement
+        $cc->clean(['namespace A;']);
+        $cc->clean(['use StdClass as Foo;']);
+
+        // Re-enter namespace A - should clear previous use statements
+        $cc->clean(['namespace A;']);
+
+        // Should be able to use same alias for a different class
+        $result = $cc->clean(['use DateTime as Foo;']);
+        $this->assertNotFalse($result);
+        $this->assertStringContainsString('DateTime', $result);
     }
 
-    public function testLooksLikeActionWithMethodCalls()
+    public function testGlobalNamespaceReEntryResetsUseStatements()
     {
         $cc = new CodeCleaner();
-        $this->assertTrue($cc->codeLooksLikeAction(['$obj->setName("test")']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$model->save()']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$obj->set_name("test")']));
+
+        // Add use statement in global namespace
+        $cc->clean(['use StdClass as Bar;']);
+
+        // Enter braced global namespace - should clear previous use statements
+        $cc->clean(['namespace {}']);
+
+        // Should be able to use same alias for a different class
+        $result = $cc->clean(['use DateTime as Bar;']);
+        $this->assertNotFalse($result);
+        $this->assertStringContainsString('DateTime', $result);
     }
 
-    public function testLooksLikeInspectionWithVariable()
+    public function testUseStatementsPersistWithinNamespace()
     {
         $cc = new CodeCleaner();
-        $this->assertFalse($cc->codeLooksLikeAction(['$x']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$obj->property']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$obj["foo"][$bar]']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x ?? []']));
-    }
 
-    public function testLooksLikeInspectionWithGetters()
-    {
-        $cc = new CodeCleaner();
-        $this->assertFalse($cc->codeLooksLikeAction(['$obj->getName()']));
-        $this->assertFalse($cc->codeLooksLikeAction(['User::find(1)']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x->isValid()']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x->toArray()']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x->asString()']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x->is_valid()']));
-        $this->assertFalse($cc->codeLooksLikeAction(['$x->to_array()']));
-    }
+        // Enter namespace and add use statement
+        $cc->clean(['namespace Foo;']);
+        $cc->clean(['use StdClass as Bar;']);
 
-    public function testPrefixMatchingAvoidsFalsePositives()
-    {
-        $cc = new CodeCleaner();
-        // These should NOT match "is", "to", "as" prefixes, and since they don't
-        // match inspection prefixes, they're treated as actions
-        $this->assertTrue($cc->codeLooksLikeAction(['$x->issue()']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$x->top()']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$x->asset()']));
-        $this->assertTrue($cc->codeLooksLikeAction(['$x->total()']));
-    }
+        // Execute code without namespace declaration - use statement should persist
+        // and code should be wrapped in the namespace
+        $result = $cc->clean(['$x = new Bar();']);
+        $this->assertNotFalse($result);
+        $this->assertStringContainsString('namespace Foo', $result);
 
-    public function testActionDetectionWithNamespace()
-    {
-        $cc = new CodeCleaner();
-        // Code within a namespace should still be detected correctly
-        $this->assertTrue($cc->codeLooksLikeAction(['namespace Foo; $x = 1']));
-        $this->assertFalse($cc->codeLooksLikeAction(['namespace Foo; $x']));
-        $this->assertTrue($cc->codeLooksLikeAction(['namespace Foo; $obj->setName("test")']));
-        $this->assertFalse($cc->codeLooksLikeAction(['namespace Foo; $obj->getName()']));
+        // The use statement should persist for resolveClassName
+        $resolved = $cc->resolveClassName('Bar');
+        $this->assertSame('\\StdClass', $resolved);
     }
 }

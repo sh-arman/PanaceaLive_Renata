@@ -11,7 +11,8 @@
         "php": "^8.1",
         "cartalyst/sentinel": "^7.0",
         "laravel/framework": "^10.0",
-        "laravel/tinker": "^2.8"
+        "laravel/tinker": "^2.8",
+        "symfony/polyfill-intl-normalizer": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.9.1",
